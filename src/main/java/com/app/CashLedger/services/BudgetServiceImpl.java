@@ -116,8 +116,8 @@ public class BudgetServiceImpl implements BudgetService{
     }
     @Transactional
     @Override
-    public List<BudgetResponseDto> getUserBudgets(Integer userId) {
-        List<Budget> budgets = budgetDao.getUserBudgets(userId);
+    public List<BudgetResponseDto> getUserBudgets(Integer userId, String name) {
+        List<Budget> budgets = budgetDao.getUserBudgets(userId, name);
         List<BudgetResponseDto> transformedBudgets = new ArrayList<>();
 
 
@@ -150,8 +150,8 @@ public class BudgetServiceImpl implements BudgetService{
     }
 
     @Override
-    public List<BudgetResponseDto> getCategoryBudgets(Integer categoryId) {
-        List<Budget> budgets = budgetDao.getCategoryBudgets(categoryId);
+    public List<BudgetResponseDto> getCategoryBudgets(Integer categoryId, String name) {
+        List<Budget> budgets = budgetDao.getCategoryBudgets(categoryId, name);
         List<BudgetResponseDto> transformedBudgets = new ArrayList<>();
 
 

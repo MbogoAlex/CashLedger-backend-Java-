@@ -32,15 +32,31 @@ public class BudgetDao {
         return query.getSingleResult();
     }
 
-    public List<Budget> getUserBudgets(Integer id) {
-        TypedQuery<Budget> query = entityManager.createQuery("from Budget where userAccount.id = :id", Budget.class);
+    public List<Budget> getUserBudgets(Integer id, String name) {
+        TypedQuery<Budget> query = entityManager.createQuery("from Budget where userAccount.id = :id and " +
+                "(:name is null or LOWER(name) like concat('%', :name, '%')) or " +
+                        "(:name is null or LOWER(category.name) like concat('%', :name, '%'))",
+                Budget.class);
         query.setParameter("id", id);
+        if(name != null) {
+            query.setParameter("name", name.toLowerCase());
+        } else {
+            query.setParameter("name", "");
+        }
         return query.getResultList();
     }
 
-    public List<Budget> getCategoryBudgets(Integer id) {
-        TypedQuery<Budget> query = entityManager.createQuery("from Budget where category.id = :id", Budget.class);
+    public List<Budget> getCategoryBudgets(Integer id, String name) {
+        TypedQuery<Budget> query = entityManager.createQuery("from Budget where category.id = :id and " +
+                "(:name is null or LOWER(name) like concat('%', :name, '%')) or " +
+                "(:name is null or LOWER(category.name) like concat('%', :name, '%'))", Budget.class);
         query.setParameter("id", id);
+        if(name != null) {
+            query.setParameter("name", name.toLowerCase());
+        } else {
+            query.setParameter("name", "");
+        }
+
         return query.getResultList();
     }
 

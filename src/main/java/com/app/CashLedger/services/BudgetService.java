@@ -9,9 +9,9 @@ public interface BudgetService {
     BudgetResponseDto updateBudget(BudgetEditDto budget, Integer userId);
 
     BudgetResponseDto getBudget(Integer budgetId);
-    List<BudgetResponseDto> getUserBudgets(Integer userId);
+    List<BudgetResponseDto> getUserBudgets(Integer userId, String name);
 
-    List<BudgetResponseDto> getCategoryBudgets(Integer categoryId);
+    List<BudgetResponseDto> getCategoryBudgets(Integer categoryId, String name);
 
     String deleteBudget(Integer budgetId);
 }
