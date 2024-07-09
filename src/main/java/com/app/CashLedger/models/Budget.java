@@ -20,6 +20,7 @@ public class Budget {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String name;
+    private Boolean active;
     private Double budgetLimit;
     private LocalDateTime createdAt;
     private LocalDate limitDate;

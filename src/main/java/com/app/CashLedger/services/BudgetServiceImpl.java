@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 @Service
@@ -44,6 +45,7 @@ public class BudgetServiceImpl implements BudgetService{
 
         Budget budget = Budget.builder()
                 .name(budgetDto.getName())
+                .active(true)
                 .budgetLimit(budgetDto.getBudgetLimit())
                 .createdAt(LocalDateTime.now())
                 .limitDate(LocalDate.parse(budgetDto.getLimitDate()))
@@ -75,6 +77,9 @@ public class BudgetServiceImpl implements BudgetService{
             budgetLimitReached = true;
             budgetExceededBy = expenditure - budget.getBudgetLimit();
         }
+        if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+            budget.setActive(false);
+        }
         budget.setName(budgetDto.getName());
         budget.setLimitReached(budgetLimitReached);
         budget.setExceededBy(budgetExceededBy);
@@ -102,6 +107,9 @@ public class BudgetServiceImpl implements BudgetService{
         }
 
         if(expenditure >= budget.getBudgetLimit()) {
+            if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+                budget.setActive(false);
+            }
             budgetLimitReached = true;
             budgetExceededBy = expenditure - budget.getBudgetLimit();
             budget.setLimitReached(true);
@@ -133,7 +141,10 @@ public class BudgetServiceImpl implements BudgetService{
                 }
             }
 
-            if(expenditure >= budget.getBudgetLimit()) {
+            if(expenditure >= budget.getBudgetLimit() && !budget.getLimitReached()) {
+                if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+                    budget.setActive(false);
+                }
                 budgetLimitReached = true;
                 budgetExceededBy = expenditure - budget.getBudgetLimit();
                 budget.setLimitReached(true);
@@ -167,7 +178,7 @@ public class BudgetServiceImpl implements BudgetService{
                 }
             }
 
-            if(expenditure >= budget.getBudgetLimit()) {
+            if(expenditure >= budget.getBudgetLimit() && !budget.getLimitReached()) {
                 budgetLimitReached = true;
                 budgetExceededBy = expenditure - budget.getBudgetLimit();
                 budget.setLimitReached(true);
@@ -203,11 +214,13 @@ public class BudgetServiceImpl implements BudgetService{
         BudgetResponseDto budgetResponseDto = BudgetResponseDto.builder()
                 .id(budget.getId())
                 .name(budget.getName())
+                .active(budget.getActive())
                 .budgetLimit(budget.getBudgetLimit())
                 .expenditure(expenditure)
                 .createdAt(budget.getCreatedAt().toString())
                 .limitDate(budget.getLimitDate().toString())
                 .limitReached(budget.getLimitReached())
+                .limitReachedAt(budget.getLimitReachedAt())
                 .exceededBy(budget.getExceededBy())
                 .category(category)
                 .user(userDetailsDto)

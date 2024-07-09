@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,11 +15,13 @@ import lombok.experimental.SuperBuilder;
 public class BudgetResponseDto {
     private Integer id;
     private String name;
+    private Boolean active;
     private Double expenditure;
     private Double budgetLimit;
     private String createdAt;
     private String limitDate;
     private Boolean limitReached;
+    private LocalDateTime limitReachedAt;
     private Double exceededBy;
     private Category category;
     private UserDetailsDto user;
