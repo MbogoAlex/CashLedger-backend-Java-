@@ -16,7 +16,7 @@ public interface CategoryService {
 
     CategoryKeywordDto updateCategoryKeyword(CategoryKeywordDto categoryKeywordDto);
 
-    List<TransactionCategoryDto> getCategories(Integer userId);
+    List<TransactionCategoryDto> getCategories(Integer userId, String name, String orderBy);
 
     String deleteCategory(Integer id);
     String deleteCategoryKeyword(CategoryKeywordEditDto keywordDetails);

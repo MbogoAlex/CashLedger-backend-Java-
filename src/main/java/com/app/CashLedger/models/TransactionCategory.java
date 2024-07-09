@@ -22,6 +22,7 @@ public class TransactionCategory {
     private Integer id;
     private String name;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     @ManyToMany(mappedBy = "categories", cascade = CascadeType.ALL)
     private List<Transaction> transactions = new ArrayList<>();
 
@@ -33,4 +34,5 @@ public class TransactionCategory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserAccount userAccount;
+    private Double updatedTimes;
 }

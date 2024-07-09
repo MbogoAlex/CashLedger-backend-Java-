@@ -79,6 +79,8 @@ public class CategoryServiceImpl implements CategoryService{
     public TransactionCategoryDto addTransactionToCategory(Transaction transaction, Integer categoryId) {
         TransactionCategory category = categoryDao.getCategory(categoryId);
         List<Transaction> existingTransactions = category.getTransactions();
+        category.setUpdatedTimes(category.getUpdatedTimes() + 1);
+        category.setUpdatedAt(LocalDateTime.now());
 
         for(Transaction transaction1 : existingTransactions) {
             if(transaction.getRecipient().equals(transaction1.getRecipient()) || transaction.getSender().equals(transaction1.getSender())) {
@@ -103,8 +105,8 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
-    public List<TransactionCategoryDto> getCategories(Integer userId) {
-        List<TransactionCategory> categories = categoryDao.getCategories(userId);
+    public List<TransactionCategoryDto> getCategories(Integer userId, String name, String orderBy) {
+        List<TransactionCategory> categories = categoryDao.getCategories(userId, name, orderBy);
         List<TransactionCategoryDto> categoryDtos = new ArrayList<>();
 
         for(TransactionCategory category : categories) {

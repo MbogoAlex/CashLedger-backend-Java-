@@ -43,9 +43,22 @@ public class CategoryDao {
         return query.getSingleResult();
     }
 
-    public List<TransactionCategory> getCategories(Integer id) {
-        TypedQuery<TransactionCategory> query = entityManager.createQuery("from TransactionCategory where userAccount.id = :id", TransactionCategory.class);
+    public List<TransactionCategory> getCategories(Integer id, String name, String orderBy) {
+        String orderClause = "order by createdAt desc";
+        if(orderBy != null && orderBy.equals("latest")) {
+            orderClause = "order by updatedAt desc";
+        } else if(orderBy != null && orderBy.equals("amount")) {
+            orderClause = "order by updatedTimes desc";
+        }
+        TypedQuery<TransactionCategory> query = entityManager.createQuery("from TransactionCategory where userAccount.id = :id and " +
+                ":name is null or LOWER(name) like concat('%', :name, '%') " +
+                orderClause, TransactionCategory.class);
         query.setParameter("id", id);
+        if(name != null) {
+            query.setParameter("name", name.toLowerCase());
+        } else {
+            query.setParameter("name", "");
+        }
         return query.getResultList();
     }
 

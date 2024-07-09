@@ -33,8 +33,12 @@ public class CategoryController {
     }
 
     @GetMapping("category/{userId}")
-    public ResponseEntity<Response> getUserCategories(@PathVariable("userId") Integer userId) {
-        return buildResponse("category", categoryService.getCategories(userId), "Categories fetched", HttpStatus.OK);
+    public ResponseEntity<Response> getUserCategories(
+            @PathVariable("userId") Integer userId,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "orderBy", required = false) String orderBy
+    ) {
+        return buildResponse("category", categoryService.getCategories(userId, name, orderBy), "Categories fetched", HttpStatus.OK);
     }
     @PutMapping("category/name/{id}")
     public ResponseEntity<Response> updateCategoryName(@RequestBody CategoryEditDto category, @PathVariable("id") Integer categoryId) {
