@@ -148,6 +148,41 @@ public class BudgetServiceImpl implements BudgetService{
         }
         return transformedBudgets;
     }
+
+    @Override
+    public List<BudgetResponseDto> getCategoryBudgets(Integer categoryId) {
+        List<Budget> budgets = budgetDao.getCategoryBudgets(categoryId);
+        List<BudgetResponseDto> transformedBudgets = new ArrayList<>();
+
+
+        for(Budget budget : budgets) {
+            List<Transaction> transactions = transactionDao.getGeneralTransactions(budget.getUserAccount().getId(), budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
+
+            double budgetExceededBy = 0.0;
+            boolean budgetLimitReached = false;
+            double expenditure = 0.0;
+            for(Transaction transaction : transactions) {
+                if(transaction.getTransactionAmount() < 0) {
+                    expenditure = expenditure + Math.abs(transaction.getTransactionAmount());
+                }
+            }
+
+            if(expenditure >= budget.getBudgetLimit()) {
+                budgetLimitReached = true;
+                budgetExceededBy = expenditure - budget.getBudgetLimit();
+                budget.setLimitReached(true);
+                budget.setExceededBy(budgetExceededBy);
+                budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+                transformedBudgets.add(budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure));
+            } else {
+                transformedBudgets.add(budgetToBudgetResponseDto(budget, expenditure));
+            }
+
+
+        }
+        return transformedBudgets;
+    }
+
     @Transactional
     @Override
     public String deleteBudget(Integer budgetId) {

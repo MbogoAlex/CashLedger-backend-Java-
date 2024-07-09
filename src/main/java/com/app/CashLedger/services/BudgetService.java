@@ -11,5 +11,7 @@ public interface BudgetService {
     BudgetResponseDto getBudget(Integer budgetId);
     List<BudgetResponseDto> getUserBudgets(Integer userId);
 
+    List<BudgetResponseDto> getCategoryBudgets(Integer categoryId);
+
     String deleteBudget(Integer budgetId);
 }

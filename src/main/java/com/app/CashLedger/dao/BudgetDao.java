@@ -38,6 +38,12 @@ public class BudgetDao {
         return query.getResultList();
     }
 
+    public List<Budget> getCategoryBudgets(Integer id) {
+        TypedQuery<Budget> query = entityManager.createQuery("from Budget where category.id = :id", Budget.class);
+        query.setParameter("id", id);
+        return query.getResultList();
+    }
+
     public String deleteBudget(Integer id) {
         Query query = entityManager.createQuery("delete from Budget where id = :id");
         query.setParameter("id", id);

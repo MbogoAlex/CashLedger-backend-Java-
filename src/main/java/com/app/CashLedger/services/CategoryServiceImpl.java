@@ -135,6 +135,8 @@ public class CategoryServiceImpl implements CategoryService{
         for(Budget budget : transactionCategory.getBudgets()) {
             TransactionCategoryDto.BudgetDto budgetDto = TransactionCategoryDto.BudgetDto.builder()
                     .id(budget.getId())
+                    .createdAt(budget.getCreatedAt().toString())
+                    .name(budget.getName())
                     .budgetLimit(budget.getBudgetLimit())
                     .createdAt(budget.getCreatedAt().toString())
                     .limitDate(budget.getLimitDate().toString())
@@ -153,6 +155,7 @@ public class CategoryServiceImpl implements CategoryService{
         TransactionCategoryDto transactionCategoryDto = TransactionCategoryDto.builder()
                 .id(transactionCategory.getId())
                 .name(transactionCategory.getName())
+                .createdAt(transactionCategory.getCreatedAt())
                 .transactions(transactions)
                 .keywords(keywords)
                 .budgets(budgets)

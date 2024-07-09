@@ -39,6 +39,10 @@ public class BudgetController {
     ResponseEntity<Response> getUserBudgets(@PathVariable("userId") Integer userId) {
         return buildResponse("budget", budgetService.getUserBudgets(userId), "Budgets fetched", HttpStatus.OK);
     }
+    @GetMapping("budget/category/{categoryId}")
+    ResponseEntity<Response> getCategoryBudgets(@PathVariable("categoryId") Integer categoryId) {
+        return buildResponse("budget", budgetService.getCategoryBudgets(categoryId), "Budgets fetched", HttpStatus.OK);
+    }
     @DeleteMapping("budget/{budgetId}")
     ResponseEntity<Response> deleteBudget(Integer budgetId) {
         return buildResponse("budget", budgetService.deleteBudget(budgetId), "Budget deleted", HttpStatus.OK);

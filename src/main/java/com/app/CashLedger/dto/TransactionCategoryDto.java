@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Data
@@ -14,6 +15,7 @@ import java.util.List;
 public class TransactionCategoryDto {
     private Integer id;
     private String name;
+    private LocalDateTime createdAt;
     private List<TransactionDto> transactions;
     private List<CategoryKeywordDto> keywords = new ArrayList<>();
     private List<BudgetDto> budgets = new ArrayList<>();
@@ -23,6 +25,7 @@ public class TransactionCategoryDto {
     @SuperBuilder
     public static class BudgetDto {
         private Integer id;
+        private String name;
         private Double budgetLimit;
         private String createdAt;
         private String limitDate;
