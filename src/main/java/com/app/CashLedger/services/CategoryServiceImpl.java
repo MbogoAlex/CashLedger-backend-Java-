@@ -1,5 +1,6 @@
 package com.app.CashLedger.services;
 
+import com.app.CashLedger.dao.BudgetDao;
 import com.app.CashLedger.dao.CategoryDao;
 import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
@@ -18,15 +19,18 @@ public class CategoryServiceImpl implements CategoryService{
     private final CategoryDao categoryDao;
     private final UserAccountDao userAccountDao;
     private final TransactionDao transactionDao;
+    private final BudgetDao budgetDao;
     @Autowired
     public CategoryServiceImpl(
             CategoryDao categoryDao,
             UserAccountDao userAccountDao,
-            TransactionDao transactionDao
+            TransactionDao transactionDao,
+            BudgetDao budgetDao
     ) {
         this.categoryDao = categoryDao;
         this.userAccountDao = userAccountDao;
         this.transactionDao = transactionDao;
+        this.budgetDao = budgetDao;
     }
     @Transactional
     @Override
@@ -94,6 +98,40 @@ public class CategoryServiceImpl implements CategoryService{
 
         return transformTransactionCategory(categoryDao.updateCategory(category));
     }
+    @Transactional
+    @Override
+    public TransactionCategoryDto addKeywordsToCategory(CategoryEditDto categoryEditDto, Integer id) {
+        TransactionCategory category = categoryDao.getCategory(id);
+        List<Transaction> filteredTransactions = new ArrayList<>();
+        List<CategoryKeyword> categoryKeywords = new ArrayList<>();
+
+        for (String keyword : categoryEditDto.getKeywords()) {
+            List<Transaction> transactions = transactionDao.getTransactions(categoryEditDto.getUserId(), keyword);
+            filteredTransactions.addAll(transactions);
+
+            CategoryKeyword categoryKeyword = CategoryKeyword.builder()
+                    .keyword(keyword)
+                    .nickName(keyword)
+                    .transactionCategory(category)
+                    .build();
+            categoryKeywords.add(categoryKeyword);
+        }
+
+        category.getTransactions().addAll(filteredTransactions);
+        category.getKeywords().addAll(categoryKeywords);
+
+        // Persist the transaction category first to get the generated ID
+        TransactionCategory savedCategory = categoryDao.updateCategory(category);
+
+        // Now associate transactions with the saved category
+        for (Transaction transaction : filteredTransactions) {
+            transaction.getCategories().add(savedCategory);
+            transactionDao.updateTransaction(transaction);
+        }
+
+
+        return transformTransactionCategory(savedCategory);
+    }
 
     @Transactional
     @Override
@@ -115,9 +153,20 @@ public class CategoryServiceImpl implements CategoryService{
 
         return categoryDtos;
     }
+
+    @Override
+    public TransactionCategoryDto getCategory(Integer categoryId) {
+        return transformTransactionCategory(categoryDao.getCategory(categoryId));
+    }
+
     @Transactional
     @Override
     public String deleteCategory(Integer id) {
+        TransactionCategory category = categoryDao.getCategory(id);
+        List<Budget> budgets = category.getBudgets();
+        for(Budget budget : budgets) {
+            budgetDao.deleteBudget(budget.getId());
+        }
         return categoryDao.deleteCategory(id);
     }
     @Transactional

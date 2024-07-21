@@ -67,16 +67,18 @@ public class TransactionDao {
         return query.getResultList();
     }
 
-    public List<Transaction> getUserTransactions(Integer userId, String entity, Integer categoryId, String transactionType, Boolean latest, String startDate, String endDate) {
+    public List<Transaction> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String startDate, String endDate) {
         String orderClause = latest ? "desc" : "asc";
 
         String hql = "select t from Transaction t " +
                 "left join t.categories tc " +
+                "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
                 "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
                 "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or b.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
@@ -84,9 +86,16 @@ public class TransactionDao {
 
         TypedQuery<Transaction> query = entityManager.createQuery(hql, Transaction.class);
         query.setParameter("id", userId);
+        if(entity == null) {
+            query.setParameter("entity", "");
+        } else if(entity.toLowerCase().equals("you")) {
+            query.setParameter("entity", "");
+        } else {
+            query.setParameter("entity", entity.toLowerCase());
+        }
 
-        query.setParameter("entity", entity.toLowerCase());
         query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
         if(transactionType != null) {
             if(transactionType.isEmpty() || transactionType == null) {
                 query.setParameter("transactionType", null);
@@ -97,15 +106,24 @@ public class TransactionDao {
             query.setParameter("transactionType", null);
         }
 
-        query.setParameter("startDate",  LocalDate.parse(startDate));
-        query.setParameter("endDate", LocalDate.parse(endDate));
+        if(startDate == null) {
+            query.setParameter("startDate",  LocalDate.parse("2000-03-06"));
+        } else {
+            query.setParameter("startDate",  LocalDate.parse(startDate));
+        }
+
+        if(endDate == null) {
+            query.setParameter("endDate", LocalDate.now());
+        } else {
+            query.setParameter("endDate", LocalDate.parse(endDate));
+        }
 
         return query.getResultList();
     }
 
 
 
-    public List<Object[]> getUserTransactionsSorted(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean orderByAmount, Boolean ascendingOrder, String startDate, String endDate) {
+    public List<Object[]> getUserTransactionsSorted(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean orderByAmount, Boolean ascendingOrder, String startDate, String endDate) {
         String orderClause;
         String orderItem;
         if(orderByAmount) {
@@ -129,10 +147,12 @@ public class TransactionDao {
         }
         String hql = "select t."+groupByClause+", t.transactionType, count(abs(t.transactionAmount)) as times, sum(abs(t.transactionAmount)) as totalAmount, sum(abs(t.transactionCost)) from Transaction t " +
                 "left join t.categories tc " +
+                "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
                 "(("+searchQuery+"))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or tc.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
@@ -142,9 +162,15 @@ public class TransactionDao {
 
         TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
         query.setParameter("id", userId);
-        query.setParameter("entity", entity != null ? entity.toLowerCase() : null);
+        if(entity == null) {
+            query.setParameter("entity", "");
+        } else {
+            query.setParameter("entity", entity.toLowerCase());
+        }
+
         query.setParameter("you", "You");
         query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
         if(transactionType != null) {
             if(transactionType.isEmpty() || transactionType == null) {
                 query.setParameter("transactionType", null);
@@ -214,7 +240,7 @@ public class TransactionDao {
         return query.getResultList().get(0).getBalance();
     }
 
-    public List<Transaction> getExpenditure(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate) {
+    public List<Transaction> getExpenditure(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate) {
         String orderClause = latest ? "desc" : "asc";
         String searchQuery;
         if(moneyIn) {
@@ -225,10 +251,12 @@ public class TransactionDao {
 
         String hql = "from Transaction t " +
                 "left join t.categories tc " +
+                "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
                 "(("+searchQuery+"))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or b.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
@@ -238,6 +266,7 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
         if(transactionType != null) {
             if(transactionType.isEmpty() || transactionType == null) {
                 query.setParameter("transactionType", null);

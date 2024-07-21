@@ -699,8 +699,8 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, String transactionType, Boolean latest, String startDate, String endDate) {
-        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, transactionType, latest, startDate, endDate);
+    public Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String startDate, String endDate) {
+        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, startDate, endDate);
         List<TransactionDto> transformedTransactions = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
         Double totalMoneyOut = 0.0;
@@ -720,8 +720,8 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getUserTransactionsSorted(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean orderByAmount, Boolean ascendingOrder, String startDate, String endDate) {
-        List<Object[]> result = transactionDao.getUserTransactionsSorted(userId, entity, categoryId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate);
+    public Map<Object, Object> getUserTransactionsSorted(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean orderByAmount, Boolean ascendingOrder, String startDate, String endDate) {
+        List<Object[]> result = transactionDao.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate);
         List<Map<String, Object>> transformedResult = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
         Double totalMoneyIn = 0.0;
@@ -731,24 +731,21 @@ public class TransactionServiceImpl implements TransactionService{
             map.put("name", row[0]);
             map.put("transactionType", row[1]);
             map.put("times", row[2]);
-            map.put("amount", row[3]);
-            map.put("transactionCost", row[4]);
-            if(map.get("amount") instanceof Double) {
-                if(moneyIn) {
-                    totalMoneyIn = totalMoneyIn + (Double) map.get("amount");
-                } else {
-                    totalMoneyOut = totalMoneyOut + Math.abs((Double) map.get("amount"));
-                }
 
+            if(moneyIn) {
+                totalMoneyIn = totalMoneyIn + (Double) row[3];
+                map.put("amount", row[3]);
+            } else {
+                totalMoneyOut = totalMoneyOut + Math.abs((Double) row[3]);
+                map.put("amount", "-"+row[3]);
             }
+
+            map.put("transactionCost", row[4]);
             transformedResult.add(map);
         }
 
-        if(moneyIn) {
-            transactionsMap.put("totalMoneyIn", totalMoneyIn);
-        } else {
-            transactionsMap.put("totalMoneyOut", totalMoneyOut);
-        }
+        transactionsMap.put("totalMoneyIn", totalMoneyIn);
+        transactionsMap.put("totalMoneyOut", totalMoneyOut);
 
         transactionsMap.put("transactions", transformedResult);
 
@@ -794,13 +791,10 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getExpenditure(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate) {
-        List<Transaction> transactions = transactionDao.getExpenditure(userId, entity, categoryId, transactionType, moneyIn, latest, startDate, endDate);
+    public Map<Object, Object> getExpenditure(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate) {
+        List<Transaction> transactions = transactionDao.getExpenditure(userId, entity, categoryId, budgetId, transactionType, moneyIn, latest, startDate, endDate);
         List<TransactionDto> transactionDtos = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
-        for(Transaction transaction : transactions) {
-            transactionDtos.add(transactionToTransactionDto(transaction));
-        }
 
 
         Double totalMoneyOut = 0.0;

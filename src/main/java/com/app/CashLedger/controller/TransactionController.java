@@ -24,12 +24,13 @@ public class TransactionController {
             @PathVariable("id") Integer userId,
             @RequestParam(value = "entity", required = false) String entity,
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "latest") Boolean latest,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getUserTransactions(userId, entity, categoryId, transactionType, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     @GetMapping("transaction/sorted/{id}")
@@ -37,6 +38,7 @@ public class TransactionController {
             @PathVariable("id") Integer userId,
             @RequestParam(value = "entity", required = false) String entity,
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "moneyIn") Boolean moneyIn,
             @RequestParam(value = "orderByAmount") Boolean orderByAmount,
@@ -44,7 +46,7 @@ public class TransactionController {
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getUserTransactionsSorted(userId, entity, categoryId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
     @GetMapping("transaction/balance/{userId}")
     public ResponseEntity<Response> getCurrentBalance(@PathVariable("userId") Integer userId) {
@@ -69,13 +71,14 @@ public class TransactionController {
             @PathVariable("id") Integer userId,
             @RequestParam(value = "entity", required = false) String entity,
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "moneyIn") Boolean moneyIn,
             @RequestParam(value = "latest") Boolean latest,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getExpenditure(userId, entity, categoryId, transactionType, moneyIn, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getExpenditure(userId, entity, categoryId, budgetId, transactionType, moneyIn, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

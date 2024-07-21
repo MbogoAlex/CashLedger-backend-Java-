@@ -27,6 +27,11 @@ public class CategoryController {
         return buildResponse("category", categoryService.createCategory(category, userId), "Category created", HttpStatus.CREATED);
     }
 
+    @PutMapping("category/{id}")
+    public ResponseEntity<Response> addKeywordsToCategory(@RequestBody CategoryEditDto category, @PathVariable("id") Integer categoryId) {
+        return buildResponse("category", categoryService.addKeywordsToCategory(category, categoryId), "Category updated", HttpStatus.CREATED);
+    }
+
     @DeleteMapping("category/{id}")
     public ResponseEntity<Response> deleteCategory(@PathVariable("id") Integer categoryId) {
         return buildResponse("category", categoryService.deleteCategory(categoryId), "Category deleted", HttpStatus.OK);
@@ -45,14 +50,20 @@ public class CategoryController {
         return buildResponse("category", categoryService.updateCategoryName(category, categoryId), "Category updated", HttpStatus.OK);
     }
 
+    @GetMapping("category/details/{categoryId}")
+    public ResponseEntity<Response> getCategory( @PathVariable("categoryId") Integer categoryId) {
+        return buildResponse("category", categoryService.getCategory(categoryId), "Category fetched", HttpStatus.OK);
+    }
+
+
     @PutMapping("category/keyword")
     public ResponseEntity<Response> updateCategoryKeyword(@RequestBody CategoryKeywordDto category) {
-        return buildResponse("category", categoryService.updateCategoryKeyword(category), "Category keyword updated", HttpStatus.OK);
+        return buildResponse("keyword", categoryService.updateCategoryKeyword(category), "Category keyword updated", HttpStatus.OK);
     }
 
     @DeleteMapping("category/keyword")
     public ResponseEntity<Response> deleteCategoryKeyword(@RequestBody CategoryKeywordEditDto keywordDetails) {
-        return buildResponse("category", categoryService.deleteCategoryKeyword(keywordDetails), "Category keyword deleted", HttpStatus.OK);
+        return buildResponse("keyword", categoryService.deleteCategoryKeyword(keywordDetails), "Category keyword deleted", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

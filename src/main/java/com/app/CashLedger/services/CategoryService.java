@@ -14,9 +14,13 @@ public interface CategoryService {
 
     TransactionCategoryDto addTransactionToCategory(Transaction transaction, Integer categoryId);
 
+    TransactionCategoryDto addKeywordsToCategory(CategoryEditDto category, Integer id);
+
     CategoryKeywordDto updateCategoryKeyword(CategoryKeywordDto categoryKeywordDto);
 
     List<TransactionCategoryDto> getCategories(Integer userId, String name, String orderBy);
+
+    TransactionCategoryDto getCategory(Integer categoryId);
 
     String deleteCategory(Integer id);
     String deleteCategoryKeyword(CategoryKeywordEditDto keywordDetails);

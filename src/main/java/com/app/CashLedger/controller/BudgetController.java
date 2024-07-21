@@ -28,8 +28,8 @@ public class BudgetController {
         return buildResponse("budget", budgetService.createBudget(budget, userId, categoryId), "Budget created", HttpStatus.CREATED);
     }
     @PutMapping("budget/{userId}")
-    ResponseEntity<Response> updateBudget(BudgetEditDto budget, Integer userId) {
-        return buildResponse("budget", budgetService.updateBudget(budget, userId), "Budget updated", HttpStatus.OK);
+    ResponseEntity<Response> updateBudget(BudgetEditDto budget, Integer budgetId) {
+        return buildResponse("budget", budgetService.updateBudget(budget, budgetId), "Budget updated", HttpStatus.OK);
     }
     @GetMapping("budget/single/{budgetId}")
     ResponseEntity<Response> getBudget(@PathVariable("budgetId") Integer budgetId) {

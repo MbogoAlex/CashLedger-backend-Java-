@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface BudgetService {
     BudgetResponseDto createBudget(BudgetEditDto budget, Integer userId, Integer categoryId);
-    BudgetResponseDto updateBudget(BudgetEditDto budget, Integer userId);
+    BudgetResponseDto updateBudget(BudgetEditDto budget, Integer budgetId);
 
     BudgetResponseDto getBudget(Integer budgetId);
     List<BudgetResponseDto> getUserBudgets(Integer userId, String name);
