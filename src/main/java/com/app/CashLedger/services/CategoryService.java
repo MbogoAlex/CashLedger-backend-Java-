@@ -18,11 +18,11 @@ public interface CategoryService {
 
     CategoryKeywordDto updateCategoryKeyword(CategoryKeywordDto categoryKeywordDto);
 
-    List<TransactionCategoryDto> getCategories(Integer userId, String name, String orderBy);
+    List<TransactionCategoryDto> getCategories(Integer userId, Integer categoryId, String name, String orderBy);
 
     TransactionCategoryDto getCategory(Integer categoryId);
 
     String deleteCategory(Integer id);
-    String deleteCategoryKeyword(CategoryKeywordEditDto keywordDetails);
+    String deleteCategoryKeyword(Integer categoryId, Integer keywordId);
 
 }

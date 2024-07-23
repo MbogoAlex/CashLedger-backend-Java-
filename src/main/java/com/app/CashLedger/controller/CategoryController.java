@@ -40,10 +40,11 @@ public class CategoryController {
     @GetMapping("category/{userId}")
     public ResponseEntity<Response> getUserCategories(
             @PathVariable("userId") Integer userId,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "orderBy", required = false) String orderBy
     ) {
-        return buildResponse("category", categoryService.getCategories(userId, name, orderBy), "Categories fetched", HttpStatus.OK);
+        return buildResponse("category", categoryService.getCategories(userId, categoryId, name, orderBy), "Categories fetched", HttpStatus.OK);
     }
     @PutMapping("category/name/{id}")
     public ResponseEntity<Response> updateCategoryName(@RequestBody CategoryEditDto category, @PathVariable("id") Integer categoryId) {
@@ -61,9 +62,9 @@ public class CategoryController {
         return buildResponse("keyword", categoryService.updateCategoryKeyword(category), "Category keyword updated", HttpStatus.OK);
     }
 
-    @DeleteMapping("category/keyword")
-    public ResponseEntity<Response> deleteCategoryKeyword(@RequestBody CategoryKeywordEditDto keywordDetails) {
-        return buildResponse("keyword", categoryService.deleteCategoryKeyword(keywordDetails), "Category keyword deleted", HttpStatus.OK);
+    @DeleteMapping("category/keyword/{categoryId}/{keywordId}")
+    public ResponseEntity<Response> deleteCategoryKeyword(@PathVariable("categoryId") Integer categoryId, @PathVariable("keywordId") Integer keywordId) {
+        return buildResponse("keyword", categoryService.deleteCategoryKeyword(categoryId, keywordId), "Category keyword deleted", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

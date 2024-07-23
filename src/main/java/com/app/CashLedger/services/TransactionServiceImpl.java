@@ -1,9 +1,12 @@
 package com.app.CashLedger.services;
 
+import com.app.CashLedger.dao.CategoryDao;
 import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
+import com.app.CashLedger.dto.TransactionEditDto;
+import com.app.CashLedger.models.CategoryKeyword;
 import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.TransactionCategory;
 import com.app.CashLedger.models.UserAccount;
@@ -22,15 +25,18 @@ import java.util.regex.Pattern;
 public class TransactionServiceImpl implements TransactionService{
     private final TransactionDao transactionDao;
     private final UserAccountDao userAccountDao;
+    private final CategoryDao categoryDao;
     private final CategoryService categoryService;
     @Autowired
     public TransactionServiceImpl(
             TransactionDao transactionDao,
             UserAccountDao userAccountDao,
+            CategoryDao categoryDao,
             CategoryService categoryService
     ) {
         this.transactionDao = transactionDao;
         this.userAccountDao = userAccountDao;
+        this.categoryDao = categoryDao;
         this.categoryService = categoryService;
     }
     @Override
@@ -686,6 +692,35 @@ public class TransactionServiceImpl implements TransactionService{
 
         return transactionDto;
     }
+    @Transactional
+    @Override
+    public String updateTransaction(TransactionEditDto transactionEditDto) {
+        Transaction transaction = transactionDao.getTransaction(transactionEditDto.getTransactionId());
+        transaction.setNickName(transactionEditDto.getNickName());
+
+        List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
+
+        List<TransactionCategory> categories = transaction.getCategories();
+
+        if(!categories.isEmpty()) {
+            for(TransactionCategory category : categories) {
+                List<CategoryKeyword> categoryKeywords = category.getKeywords();
+                for(CategoryKeyword keyword : categoryKeywords) {
+                    if(keyword.getKeyword().equals(transaction.getSender()) || keyword.getKeyword().equals(transaction.getRecipient())) {
+                        keyword.setNickName(transaction.getNickName());
+                        categoryDao.updateKeyword(keyword);
+                    }
+                }
+            }
+        }
+
+        for(Transaction transaction1 : transactions) {
+            transaction1.setNickName(transactionEditDto.getNickName());
+            transactionDao.updateTransaction(transaction1);
+        }
+
+        return "Transactions updated";
+    }
 
     @Override
     public List<TransactionDto> getTransactions(Integer userId, String entity) {
@@ -729,18 +764,19 @@ public class TransactionServiceImpl implements TransactionService{
         for (Object[] row : result) {
             Map<String, Object> map = new HashMap<>();
             map.put("name", row[0]);
-            map.put("transactionType", row[1]);
-            map.put("times", row[2]);
+            map.put("nickName", row[1]);
+            map.put("transactionType", row[2]);
+            map.put("times", row[3]);
 
             if(moneyIn) {
-                totalMoneyIn = totalMoneyIn + (Double) row[3];
-                map.put("amount", row[3]);
+                totalMoneyIn = totalMoneyIn + (Double) row[4];
+                map.put("amount", row[4]);
             } else {
-                totalMoneyOut = totalMoneyOut + Math.abs((Double) row[3]);
-                map.put("amount", "-"+row[3]);
+                totalMoneyOut = totalMoneyOut + Math.abs((Double) row[4]);
+                map.put("amount", "-"+row[4]);
             }
 
-            map.put("transactionCost", row[4]);
+            map.put("transactionCost", row[5]);
             transformedResult.add(map);
         }
 
@@ -825,6 +861,7 @@ public class TransactionServiceImpl implements TransactionService{
             categories.add(category);
         }
         TransactionDto transactionDto = TransactionDto.builder()
+                .transactionId(transaction.getId())
                 .transactionCode(transaction.getTransactionCode())
                 .transactionType(transaction.getTransactionType())
                 .transactionAmount(transaction.getTransactionAmount())
@@ -833,6 +870,7 @@ public class TransactionServiceImpl implements TransactionService{
                 .time(transaction.getTime())
                 .sender(transaction.getSender())
                 .recipient(transaction.getRecipient())
+                .nickName(transaction.getNickName())
                 .balance(transaction.getBalance())
                 .categories(categories)
                 .build();

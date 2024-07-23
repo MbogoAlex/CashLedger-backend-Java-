@@ -137,14 +137,24 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public CategoryKeywordDto updateCategoryKeyword(CategoryKeywordDto categoryKeywordDto) {
         CategoryKeyword categoryKeyword = categoryDao.getCategoryKeyword(categoryKeywordDto.getId());
+        TransactionCategory category = categoryKeyword.getTransactionCategory();
+        List<Transaction> transactions = category.getTransactions();
+
+        for(Transaction transaction : transactions) {
+            if(transaction.getSender().equals(categoryKeyword.getKeyword()) || transaction.getRecipient().equals(categoryKeyword.getKeyword())) {
+                transaction.setNickName(categoryKeywordDto.getNickName());
+                transactionDao.updateTransaction(transaction);
+            }
+        }
+
         categoryKeyword.setKeyword(categoryKeywordDto.getKeyWord());
         categoryKeyword.setNickName(categoryKeywordDto.getNickName());
         return categoryToCategoryKeywordDto(categoryDao.updateCategoryKeyword(categoryKeyword));
     }
 
     @Override
-    public List<TransactionCategoryDto> getCategories(Integer userId, String name, String orderBy) {
-        List<TransactionCategory> categories = categoryDao.getCategories(userId, name, orderBy);
+    public List<TransactionCategoryDto> getCategories(Integer userId, Integer categoryId, String name, String orderBy) {
+        List<TransactionCategory> categories = categoryDao.getCategories(userId, categoryId, name, orderBy);
         List<TransactionCategoryDto> categoryDtos = new ArrayList<>();
 
         for(TransactionCategory category : categories) {
@@ -171,8 +181,8 @@ public class CategoryServiceImpl implements CategoryService{
     }
     @Transactional
     @Override
-    public String deleteCategoryKeyword(CategoryKeywordEditDto keywordDetails) {
-        return categoryDao.deleteCategoryKeyword(keywordDetails);
+    public String deleteCategoryKeyword(Integer categoryId, Integer keywordId) {
+        return categoryDao.deleteCategoryKeyword(categoryId, keywordId);
     }
 
     private TransactionCategoryDto transformTransactionCategory(TransactionCategory transactionCategory) {
@@ -224,6 +234,7 @@ public class CategoryServiceImpl implements CategoryService{
             categories.add(category);
         }
         TransactionDto transactionDto = TransactionDto.builder()
+                .transactionId(transaction.getId())
                 .transactionCode(transaction.getTransactionCode())
                 .transactionType(transaction.getTransactionType())
                 .transactionAmount(transaction.getTransactionAmount())
@@ -231,6 +242,7 @@ public class CategoryServiceImpl implements CategoryService{
                 .date(transaction.getDate())
                 .time(transaction.getTime())
                 .sender(transaction.getSender())
+                .nickName(transaction.getNickName())
                 .recipient(transaction.getRecipient())
                 .balance(transaction.getBalance())
                 .categories(categories)

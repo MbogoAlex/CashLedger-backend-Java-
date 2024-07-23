@@ -38,33 +38,52 @@ public class CategoryDao {
     }
 
     public CategoryKeyword getCategoryKeyword(Integer id) {
+        System.out.println("GETTING WITH ID: "+id);
         TypedQuery<CategoryKeyword> query = entityManager.createQuery("from CategoryKeyword where id = :id", CategoryKeyword.class);
         query.setParameter("id", id);
         return query.getSingleResult();
     }
 
-    public List<TransactionCategory> getCategories(Integer id, String name, String orderBy) {
-        String orderClause = "order by createdAt desc";
-        if(orderBy != null && orderBy.equals("latest")) {
-            orderClause = "order by updatedAt desc";
-        } else if(orderBy != null && orderBy.equals("amount")) {
-            orderClause = "order by updatedTimes desc";
+    public List<TransactionCategory> getCategories(Integer userId, Integer categoryId, String name, String orderBy) {
+        StringBuilder queryString = new StringBuilder("from TransactionCategory t where t.userAccount.id = :id");
+
+        if (categoryId != null) {
+            queryString.append(" and t.id = :categoryId");
         }
-        TypedQuery<TransactionCategory> query = entityManager.createQuery("from TransactionCategory where userAccount.id = :id and " +
-                ":name is null or LOWER(name) like concat('%', :name, '%') " +
-                orderClause, TransactionCategory.class);
-        query.setParameter("id", id);
-        if(name != null) {
+        if (name != null && !name.isEmpty()) {
+            queryString.append(" and LOWER(t.name) like concat('%', :name, '%')");
+        }
+
+        String orderClause = " order by createdAt desc";
+        if (orderBy != null && orderBy.equals("latest")) {
+            orderClause = " order by updatedAt desc";
+        } else if (orderBy != null && orderBy.equals("amount")) {
+            orderClause = " order by updatedTimes desc";
+        }
+        queryString.append(orderClause);
+
+        TypedQuery<TransactionCategory> query = entityManager.createQuery(queryString.toString(), TransactionCategory.class);
+        query.setParameter("id", userId);
+
+        if (categoryId != null) {
+            query.setParameter("categoryId", categoryId);
+        }
+        if (name != null && !name.isEmpty()) {
             query.setParameter("name", name.toLowerCase());
-        } else {
-            query.setParameter("name", "");
         }
+
         return query.getResultList();
     }
+
 
     public TransactionCategory updateCategory(TransactionCategory transactionCategory) {
         entityManager.merge(transactionCategory);
         return transactionCategory;
+    }
+
+    public CategoryKeyword updateKeyword(CategoryKeyword categoryKeyword) {
+        entityManager.merge(categoryKeyword);
+        return categoryKeyword;
     }
 
     public String deleteCategory(Integer id) {
@@ -122,10 +141,10 @@ public class CategoryDao {
 
 
 
-    public String deleteCategoryKeyword(CategoryKeywordEditDto keywordDetails) {
+    public String deleteCategoryKeyword(Integer categoryId, Integer keywordId) {
         TypedQuery<CategoryKeyword> fetchQuery = entityManager.createQuery("from CategoryKeyword where id = :id", CategoryKeyword.class);
-        System.out.println(keywordDetails);
-        fetchQuery.setParameter("id", keywordDetails.getKeywordId());
+        System.out.println("CategoryId: "+categoryId+" KeywordId: "+keywordId);
+        fetchQuery.setParameter("id", keywordId);
         CategoryKeyword categoryKeyword = fetchQuery.getSingleResult();
         String keyword = categoryKeyword.getKeyword();
         System.out.println(keyword);
@@ -134,7 +153,7 @@ public class CategoryDao {
         TypedQuery<Integer> transactionQuery = entityManager.createQuery(
                 "select t.id from Transaction t join t.categories c where c.id = :categoryId and (LOWER(t.sender) like concat('%', :entity, '%') or LOWER(t.recipient) like concat('%', :entity, '%'))", Integer.class);
         transactionQuery.setParameter("entity", keyword.toLowerCase());
-        transactionQuery.setParameter("categoryId", keywordDetails.getCategoryId());
+        transactionQuery.setParameter("categoryId", categoryId);
         List<Integer> transactionIds = transactionQuery.getResultList();
 
         for(Integer id : transactionIds) {
@@ -147,12 +166,12 @@ public class CategoryDao {
             Query deleteQuery = entityManager.createNativeQuery(
                     "DELETE FROM transaction_category_mapping WHERE transaction_id IN :transactionIds AND category_id = :categoryId");
             deleteQuery.setParameter("transactionIds", transactionIds);
-            deleteQuery.setParameter("categoryId", keywordDetails.getCategoryId());
+            deleteQuery.setParameter("categoryId", categoryId);
             deleteQuery.executeUpdate();
         }
 
         Query query = entityManager.createQuery("delete from CategoryKeyword where id = :id");
-        query.setParameter("id", keywordDetails.getKeywordId());
+        query.setParameter("id", keywordId);
 
 //        return transactionIds.size() + " records";
         return "Deleted "+query.executeUpdate()+" rows";

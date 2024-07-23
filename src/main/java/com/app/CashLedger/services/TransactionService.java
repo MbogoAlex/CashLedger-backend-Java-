@@ -2,6 +2,7 @@ package com.app.CashLedger.services;
 
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
+import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Transaction;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,8 @@ public interface TransactionService {
     List<TransactionDto> addTransactions(List<TransactionDto> transactions, Integer userId);
 
     TransactionDto extractTransactionDetails(MessageDto message, Integer userId);
+
+    String updateTransaction(TransactionEditDto transactionEditDto);
 
     List<TransactionDto> getTransactions(Integer userId, String entity);
 

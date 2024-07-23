@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 public class TransactionDto {
+    private Integer transactionId;
     private String transactionCode;
     private String transactionType;
     private Double transactionAmount;
@@ -22,6 +23,7 @@ public class TransactionDto {
     private LocalTime time;
     private String sender;
     private String recipient;
+    private String nickName;
     private Double balance;
     private List<Category> categories = new ArrayList<>();
     @Data

@@ -30,6 +30,12 @@ public class TransactionDao {
         return transaction;
     }
 
+    public Transaction getTransaction(Integer id) {
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where id = :id", Transaction.class);
+        query.setParameter("id", id);
+        return query.getSingleResult();
+    }
+
     public List<Transaction> addTransactions(List<Transaction> transactions) {
         for(Transaction transaction : transactions) {
             entityManager.persist(transaction);
@@ -76,6 +82,7 @@ public class TransactionDao {
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
                 "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
                 "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
                 "and (:budgetId is null or b.id = :budgetId) " +
@@ -140,25 +147,27 @@ public class TransactionDao {
         String searchQuery;
         if(moneyIn) {
             groupByClause = "sender";
-            searchQuery = "t.sender != :you and LOWER(t.sender) like concat('%', :entity, '%')";
+            searchQuery = "t.transactionAmount > 0 ";
         } else {
             groupByClause = "recipient";
-            searchQuery = "t.recipient != :you and LOWER(t.recipient) like concat('%', :entity, '%')";
+            searchQuery = "t.transactionAmount < 0 ";
         }
-        String hql = "select t."+groupByClause+", t.transactionType, count(abs(t.transactionAmount)) as times, sum(abs(t.transactionAmount)) as totalAmount, sum(abs(t.transactionCost)) from Transaction t " +
+        String hql = "select t."+groupByClause+", t.nickName, t.transactionType, count(abs(t.transactionAmount)) as times, sum(abs(t.transactionAmount)) as totalAmount, sum(abs(t.transactionCost)) from Transaction t " +
                 "left join t.categories tc " +
                 "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
-                "(("+searchQuery+"))) " +
+                "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
                 "and (:budgetId is null or tc.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
-                "group by t."+groupByClause+", t.transactionType " +  // Include t.transactionType in GROUP BY
+                "and "+searchQuery+
+                "group by t."+groupByClause+", t.nickName, t.transactionType " +  // Include t.nickName in GROUP BY
                 "order by "+orderItem+" "+orderClause;
-
 
         TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
         query.setParameter("id", userId);
@@ -167,8 +176,6 @@ public class TransactionDao {
         } else {
             query.setParameter("entity", entity.toLowerCase());
         }
-
-        query.setParameter("you", "You");
         query.setParameter("categoryId", categoryId);
         query.setParameter("budgetId", budgetId);
         if(transactionType != null) {
@@ -186,6 +193,7 @@ public class TransactionDao {
 
         return query.getResultList();
     }
+
 
     public List<Object[]> getUserTransactionsSortedByFrequency(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean ascendingOrder, String startDate, String endDate) {
         String orderClause;
@@ -244,9 +252,11 @@ public class TransactionDao {
         String orderClause = latest ? "desc" : "asc";
         String searchQuery;
         if(moneyIn) {
-            searchQuery = "t.sender != :you and LOWER(t.sender) like concat('%', :entity, '%')";
+//            searchQuery = "t.sender != :you and LOWER(t.sender) like concat('%', :entity, '%')";
+            searchQuery = "t.transactionAmount > 0 ";
         } else {
-            searchQuery = "t.recipient != :you and LOWER(t.recipient) like concat('%', :entity, '%')";
+//            searchQuery = "t.recipient != :you and LOWER(t.recipient) like concat('%', :entity, '%')";
+            searchQuery = "t.transactionAmount < 0 ";
         }
 
         String hql = "from Transaction t " +
@@ -254,12 +264,15 @@ public class TransactionDao {
                 "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
                 "(:entity is null or " +
-                "(("+searchQuery+"))) " +
+                "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
                 "and (:categoryId is null or tc.id = :categoryId) " +
                 "and (:budgetId is null or b.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
+                "and "+searchQuery+
                 "order by t.date " + orderClause + ", t.time " + orderClause;
 
         TypedQuery<Transaction> query = entityManager.createQuery(hql, Transaction.class);
@@ -276,7 +289,7 @@ public class TransactionDao {
         } else {
             query.setParameter("transactionType", null);
         }
-        query.setParameter("you", "You");
+//        query.setParameter("you", "You");
 //        query.setParameter("moneyIn", moneyIn);
         query.setParameter("startDate",  LocalDate.parse(startDate));
         query.setParameter("endDate", LocalDate.parse(endDate));

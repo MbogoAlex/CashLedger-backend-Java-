@@ -1,5 +1,6 @@
 package com.app.CashLedger.controller;
 
+import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Response;
 import com.app.CashLedger.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,11 @@ public class TransactionController {
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         return buildResponse("transaction", transactionService.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+    }
+
+    @PutMapping("transaction/update")
+    public ResponseEntity<Response> updateTransaction(@RequestBody TransactionEditDto transactionEditDto) {
+        return buildResponse("transaction", transactionService.updateTransaction(transactionEditDto), "Transaction updated", HttpStatus.OK);
     }
     @GetMapping("transaction/balance/{userId}")
     public ResponseEntity<Response> getCurrentBalance(@PathVariable("userId") Integer userId) {

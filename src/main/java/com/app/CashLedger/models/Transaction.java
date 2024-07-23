@@ -27,6 +27,7 @@ public class Transaction {
     private LocalTime time;
     private String sender;
     private String recipient;
+    private String nickName;
     private Double balance;
 
     @ManyToOne(fetch = FetchType.LAZY)
