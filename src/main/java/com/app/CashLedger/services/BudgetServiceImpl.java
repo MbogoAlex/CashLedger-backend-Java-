@@ -83,7 +83,7 @@ public class BudgetServiceImpl implements BudgetService{
         budget.setName(budgetDto.getName());
         budget.setLimitReached(budgetLimitReached);
         budget.setExceededBy(budgetExceededBy);
-        budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+        budget.setLimitDate(LocalDate.parse(budgetDto.getLimitDate()));
         budget.setBudgetLimit(budgetDto.getBudgetLimit());
 
         return budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure);

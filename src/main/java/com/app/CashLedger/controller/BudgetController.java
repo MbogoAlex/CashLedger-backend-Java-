@@ -27,8 +27,8 @@ public class BudgetController {
     ResponseEntity<Response> createBudget(@RequestBody BudgetEditDto budget, @PathVariable("userId") Integer userId, @PathVariable("categoryId") Integer categoryId) {
         return buildResponse("budget", budgetService.createBudget(budget, userId, categoryId), "Budget created", HttpStatus.CREATED);
     }
-    @PutMapping("budget/{userId}")
-    ResponseEntity<Response> updateBudget(BudgetEditDto budget, Integer budgetId) {
+    @PutMapping("budget/{budgetId}")
+    ResponseEntity<Response> updateBudget(@RequestBody BudgetEditDto budget, @PathVariable("budgetId") Integer budgetId) {
         return buildResponse("budget", budgetService.updateBudget(budget, budgetId), "Budget updated", HttpStatus.OK);
     }
     @GetMapping("budget/single/{budgetId}")
@@ -50,7 +50,7 @@ public class BudgetController {
         return buildResponse("budget", budgetService.getCategoryBudgets(categoryId, name), "Budgets fetched", HttpStatus.OK);
     }
     @DeleteMapping("budget/{budgetId}")
-    ResponseEntity<Response> deleteBudget(Integer budgetId) {
+    ResponseEntity<Response> deleteBudget(@PathVariable("budgetId") Integer budgetId) {
         return buildResponse("budget", budgetService.deleteBudget(budgetId), "Budget deleted", HttpStatus.OK);
     }
 
