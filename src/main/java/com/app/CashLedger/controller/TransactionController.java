@@ -50,6 +50,19 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
+    @GetMapping("transaction/grouped/{id}")
+    public ResponseEntity<Response> getGroupedTransactions(
+            @PathVariable("id") Integer userId,
+            @RequestParam(value = "entity", required = false) String entity,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        return buildResponse("transaction", transactionService.getGroupedTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+    }
+
     @PutMapping("transaction/update")
     public ResponseEntity<Response> updateTransaction(@RequestBody TransactionEditDto transactionEditDto) {
         return buildResponse("transaction", transactionService.updateTransaction(transactionEditDto), "Transaction updated", HttpStatus.OK);

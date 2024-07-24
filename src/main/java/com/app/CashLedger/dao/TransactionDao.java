@@ -297,6 +297,40 @@ public class TransactionDao {
         return query.getResultList();
     }
 
+    public List<Object[]> getGroupedTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+        String hql = "select t.date, " +
+                "count(abs(t.transactionAmount)) as times, " +
+                "sum(case when t.transactionAmount > 0 then abs(t.transactionAmount) else 0 end) as totalMoneyIn, " +
+                "sum(case when t.transactionAmount < 0 then abs(t.transactionAmount) else 0 end) as totalMoneyOut, " +
+                "sum(abs(t.transactionCost)) " +
+                "from Transaction t " +
+                "left join t.categories tc " +
+                "left join tc.budgets b " +
+                "where t.userAccount.id = :id and " +
+                "(:entity is null or " +
+                "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
+                "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or tc.id = :budgetId) " +
+                "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
+                "and (t.date >= :startDate) " +
+                "and (t.date <= :endDate) " +
+                "group by t.date " +
+                "order by t.date desc";
+
+        TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
+        query.setParameter("id", userId);
+        query.setParameter("entity", entity == null ? "" : entity.toLowerCase());
+        query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
+        query.setParameter("transactionType", transactionType == null || transactionType.isEmpty() ? null : transactionType.toLowerCase());
+        query.setParameter("startDate", LocalDate.parse(startDate));
+        query.setParameter("endDate", LocalDate.parse(endDate));
+
+        return query.getResultList();
+    }
+
 
 
 }

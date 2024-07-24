@@ -789,6 +789,35 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
+    public Map<Object, Object> getGroupedTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+        List<Object[]> result = transactionDao.getGroupedTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+        List<Map<String, Object>> transformedResult = new ArrayList<>();
+        Map<Object, Object> transactionsMap = new HashMap<>();
+        Double totalMoneyIn = 0.0;
+        Double totalMoneyOut = 0.0;
+        for (Object[] row : result) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("date", row[0]);
+            map.put("times", row[1]);
+            map.put("moneyIn", row[2]);
+            map.put("moneyOut", row[3]);
+
+            totalMoneyIn = totalMoneyIn + (Double) row[2];
+            totalMoneyOut = totalMoneyOut + Math.abs((Double) row[3]);
+
+            map.put("transactionCost", row[4]);
+            transformedResult.add(map);
+        }
+
+        transactionsMap.put("totalMoneyIn", totalMoneyIn);
+        transactionsMap.put("totalMoneyOut", totalMoneyOut);
+
+        transactionsMap.put("transactions", transformedResult);
+
+        return transactionsMap;
+    }
+
+    @Override
     public Map<Object, Object> getUserTransactionsSortedByFrequency(Integer userId, String entity, Integer categoryId, String transactionType, Boolean moneyIn, Boolean ascendingOrder, String startDate, String endDate) {
         List<Object[]> result = transactionDao.getUserTransactionsSortedByFrequency(userId, entity, categoryId, transactionType, moneyIn, ascendingOrder, startDate, endDate);
         List<Map<String, Object>> transformedResult = new ArrayList<>();
