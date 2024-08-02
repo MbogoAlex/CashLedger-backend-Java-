@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.time.LocalDateTime;
 
 import static java.util.Map.of;
@@ -126,7 +127,7 @@ public class TransactionController {
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
-    ) throws JRException {
+    ) throws JRException, ParseException {
         byte[] pdfData = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
 
         HttpHeaders headers = new HttpHeaders();

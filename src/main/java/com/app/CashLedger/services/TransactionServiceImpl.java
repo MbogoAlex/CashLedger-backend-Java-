@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -923,7 +925,7 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException {
+    public byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException {
         // Path to the JRXML file
 //        String jrxmlPath = "/home/mbogo/Desktop/CashLedger/CashLedger/src/main/java/com/app/CashLedger/reportModel/AllTransactionsReportModel.jrxml";
 
@@ -932,16 +934,33 @@ public class TransactionServiceImpl implements TransactionService{
         List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
         List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
 
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM dd, yyyy");
+
+        // Parse the input dates
+        Date start = inputFormat.parse(startDate);
+        Date end = inputFormat.parse(endDate);
+
+        // Format the dates to the desired output format
+        String formattedStartDate = outputFormat.format(start);
+        String formattedEndDate = outputFormat.format(end);
+
+        Double totalIn = 0.0;
+        Double totalOut = 0.0;
+        Double totalTransactionCost = 0.0;
+
         // Process each transaction
         for (Transaction transaction : transactions) {
             List<String> categoryNames = new ArrayList<>();
-            categoryNames.add("");
-            String moneyIn = "";
-            String moneyOut = "";
-            String transactionCost = "";
+            String moneyIn = "-";
+            String moneyOut = "-";
+            String transactionCost = "-";
             if (transaction.getTransactionAmount() > 0) {
+                totalIn = totalIn + transaction.getTransactionAmount();
                 moneyIn = "Ksh" + transaction.getTransactionAmount();
             } else if (transaction.getTransactionAmount() < 0) {
+                totalOut = totalOut + Math.abs(transaction.getTransactionAmount());
+                totalTransactionCost = totalTransactionCost + Math.abs(transaction.getTransactionCost());
                 moneyOut = "Ksh" + Math.abs(transaction.getTransactionAmount());
                 transactionCost = "Ksh" + Math.abs(transaction.getTransactionCost());
             }
@@ -949,6 +968,8 @@ public class TransactionServiceImpl implements TransactionService{
                 for (TransactionCategory category : transaction.getCategories()) {
                     categoryNames.add(category.getName());
                 }
+            } else {
+                categoryNames.add("-");
             }
 
             AllTransactionsReportModel model = AllTransactionsReportModel.builder()
@@ -969,8 +990,12 @@ public class TransactionServiceImpl implements TransactionService{
         // Parameters for the report
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("owner", userAccount.getFname() + " " + userAccount.getLname() + ", " + userAccount.getPhoneNumber());
-        parameters.put("startDate", startDate);
-        parameters.put("endDate", endDate);
+        parameters.put("startDate", formattedStartDate);
+        parameters.put("endDate", formattedEndDate);
+        parameters.put("totalIn", "Ksh" + String.format("%.2f", totalIn));
+        parameters.put("totalOut", "Ksh" + String.format("%.2f", totalOut));
+        parameters.put("totalTransactionCost", "Ksh" + String.format("%.2f", totalTransactionCost));
+        parameters.put("size", transactions.size());
         parameters.put("allTransactionsDataset", allTransactionsDataSource);
 
         // Corrected path for the JRXML file

@@ -7,6 +7,7 @@ import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.JRException;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,6 @@ public interface TransactionService {
 
     Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate);
 
-    byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException;
+    byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException;
 
 }
