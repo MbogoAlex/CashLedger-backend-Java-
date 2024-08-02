@@ -2,9 +2,13 @@ package com.app.CashLedger.controller;
 
 import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Response;
+import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import com.app.CashLedger.services.TransactionService;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +55,7 @@ public class TransactionController {
     }
 
     @GetMapping("transaction/grouped/{id}")
-    public ResponseEntity<Response> getGroupedTransactions(
+    public ResponseEntity<Response> getGroupedByDateTransactions(
             @PathVariable("id") Integer userId,
             @RequestParam(value = "entity", required = false) String entity,
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
@@ -60,7 +64,20 @@ public class TransactionController {
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getGroupedTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getGroupedByDateTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+    }
+
+    @GetMapping("transaction/grouped/entity/{id}")
+    public ResponseEntity<Response> getGroupedByEntityTransactions(
+            @PathVariable("id") Integer userId,
+            @RequestParam(value = "entity", required = false) String entity,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        return buildResponse("transaction", transactionService.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     @PutMapping("transaction/update")
@@ -98,6 +115,26 @@ public class TransactionController {
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         return buildResponse("transaction", transactionService.getExpenditure(userId, entity, categoryId, budgetId, transactionType, moneyIn, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+    }
+
+    @GetMapping("transaction/report/{userId}")
+    public ResponseEntity<byte[]> generateAllTransactionsReport(
+            @PathVariable("userId") Integer userId,
+            @RequestParam(value = "entity", required = false) String entity,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) throws JRException {
+        byte[] pdfData = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "AllTransactionsReport.pdf");
+        headers.setContentLength(pdfData.length);
+
+        return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

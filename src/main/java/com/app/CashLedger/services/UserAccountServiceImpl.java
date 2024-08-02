@@ -105,6 +105,7 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .time(transaction.getTime())
                 .sender(transaction.getSender())
                 .recipient(transaction.getRecipient())
+                .entity(transaction.getEntity())
                 .balance(transaction.getBalance())
                 .build();
         return transactionDto;

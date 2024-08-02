@@ -244,6 +244,7 @@ public class CategoryServiceImpl implements CategoryService{
                 .sender(transaction.getSender())
                 .nickName(transaction.getNickName())
                 .recipient(transaction.getRecipient())
+                .entity(transaction.getEntity())
                 .balance(transaction.getBalance())
                 .categories(categories)
                 .build();

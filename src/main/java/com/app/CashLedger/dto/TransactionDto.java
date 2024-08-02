@@ -24,6 +24,7 @@ public class TransactionDto {
     private String sender;
     private String recipient;
     private String nickName;
+    private String entity;
     private Double balance;
     private List<Category> categories = new ArrayList<>();
     @Data

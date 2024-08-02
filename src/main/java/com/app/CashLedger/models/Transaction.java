@@ -28,6 +28,7 @@ public class Transaction {
     private String sender;
     private String recipient;
     private String nickName;
+    private String entity;
     private Double balance;
 
     @ManyToOne(fetch = FetchType.LAZY)

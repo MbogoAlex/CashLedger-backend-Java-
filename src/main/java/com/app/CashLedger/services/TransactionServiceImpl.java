@@ -10,10 +10,16 @@ import com.app.CashLedger.models.CategoryKeyword;
 import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.TransactionCategory;
 import com.app.CashLedger.models.UserAccount;
+import com.app.CashLedger.reportModel.AllTransactionsReportModel;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -595,7 +601,7 @@ public class TransactionServiceImpl implements TransactionService{
                     balance = Double.parseDouble(balanceMatcher.group(1).replace(",", "").replace(" ", ""));
                 }
             } else if(message.contains("You have received Ksh")) {
-                transactionType = "Send money";
+                transactionType = "Send Money";
                 transactionCost = 0.0;
                 recipient = "You";
 
@@ -678,6 +684,11 @@ public class TransactionServiceImpl implements TransactionService{
                 transaction.setRecipient(recipient);
                 transaction.setBalance(balance);
                 transaction.setUserAccount(userAccount);
+                if(transactionAmount > 0) {
+                    transaction.setEntity(transaction.getSender());
+                } else if(transactionAmount < 0) {
+                    transaction.setEntity(recipient);
+                }
 
                 Transaction transaction1 = transactionDao.addTransaction(transaction);
                 List<TransactionCategory> categories = userAccount.getTransactionCategories();
@@ -789,8 +800,8 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getGroupedTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
-        List<Object[]> result = transactionDao.getGroupedTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+    public Map<Object, Object> getGroupedByDateTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+        List<Object[]> result = transactionDao.getGroupedByDateTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
         List<Map<String, Object>> transformedResult = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
         Double totalMoneyIn = 0.0;
@@ -879,6 +890,111 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionsMap;
     }
 
+    @Override
+    public Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+        List<Object[]> result = transactionDao.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+        Double totalMoneyIn = 0.0;
+        Double totalMoneyOut = 0.0;
+        List<Map<String, Object>> transformedResult = new ArrayList<>();
+        Map<Object, Object> transactionsMap = new HashMap<>();
+        for (Object[] row : result) {
+            System.out.println("GROUPED TRANSACTIONS");
+            System.out.println(Arrays.toString(row));
+            Map<String, Object> map = new HashMap<>();
+            map.put("nickName", row[0]);
+            map.put("transactionType", row[1]);
+            map.put("entity", row[2]);
+            map.put("times", row[3]);
+            map.put("timesIn", row[4]);
+            map.put("timesOut", row[5]);
+            map.put("totalIn", row[6]);
+            map.put("totalOut", row[7]);
+            map.put("transactionCost", row[8]);
+
+            totalMoneyIn = totalMoneyIn + (Double) row[6];
+            totalMoneyOut = totalMoneyOut + Math.abs((Double) row[7]);
+
+            transformedResult.add(map);
+        }
+        transactionsMap.put("totalMoneyIn", totalMoneyIn);
+        transactionsMap.put("totalMoneyOut", totalMoneyOut);
+        transactionsMap.put("transactions", transformedResult);
+        return transactionsMap;
+    }
+
+    @Override
+    public byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException {
+        // Path to the JRXML file
+//        String jrxmlPath = "/home/mbogo/Desktop/CashLedger/CashLedger/src/main/java/com/app/CashLedger/reportModel/AllTransactionsReportModel.jrxml";
+
+        // Get user account and transactions
+        UserAccount userAccount = userAccountDao.getUser(userId);
+        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
+        List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
+
+        // Process each transaction
+        for (Transaction transaction : transactions) {
+            List<String> categoryNames = new ArrayList<>();
+            categoryNames.add("");
+            String moneyIn = "";
+            String moneyOut = "";
+            String transactionCost = "";
+            if (transaction.getTransactionAmount() > 0) {
+                moneyIn = "Ksh" + transaction.getTransactionAmount();
+            } else if (transaction.getTransactionAmount() < 0) {
+                moneyOut = "Ksh" + Math.abs(transaction.getTransactionAmount());
+                transactionCost = "Ksh" + Math.abs(transaction.getTransactionCost());
+            }
+            if(!transaction.getCategories().isEmpty()) {
+                for (TransactionCategory category : transaction.getCategories()) {
+                    categoryNames.add(category.getName());
+                }
+            }
+
+            AllTransactionsReportModel model = AllTransactionsReportModel.builder()
+                    .datetime(transaction.getDate() + " " + transaction.getTime())
+                    .transactionType(transaction.getTransactionType())
+                    .category(String.join(", ", categoryNames))
+                    .entity(transaction.getEntity())
+                    .moneyIn(moneyIn)
+                    .moneyOut(moneyOut)
+                    .transactionCost(transactionCost)
+                    .build();
+            allTransactionsReportModel.add(model);
+        }
+
+        // Create a data source for JasperReports
+        JRBeanCollectionDataSource allTransactionsDataSource = new JRBeanCollectionDataSource(allTransactionsReportModel);
+
+        // Parameters for the report
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("owner", userAccount.getFname() + " " + userAccount.getLname() + ", " + userAccount.getPhoneNumber());
+        parameters.put("startDate", startDate);
+        parameters.put("endDate", endDate);
+        parameters.put("allTransactionsDataset", allTransactionsDataSource);
+
+        // Corrected path for the JRXML file
+        String jrxmlPath = "/templates/AllTransactionsReport.jrxml";
+
+        try (InputStream jrxmlInput = this.getClass().getResourceAsStream(jrxmlPath);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            if (jrxmlInput == null) {
+                throw new IllegalStateException("JRXML file not found at path: " + jrxmlPath);
+            }
+            JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
+            JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
+
+            JasperExportManager.exportReportToPdfStream(print, baos);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new JRException("Error generating report", e);
+        }
+
+
+
+    }
+
 
     private TransactionDto transactionToTransactionDto(Transaction transaction) {
         List<TransactionDto.Category> categories = new ArrayList<>();
@@ -900,6 +1016,7 @@ public class TransactionServiceImpl implements TransactionService{
                 .sender(transaction.getSender())
                 .recipient(transaction.getRecipient())
                 .nickName(transaction.getNickName())
+                .entity(transaction.getEntity())
                 .balance(transaction.getBalance())
                 .categories(categories)
                 .build();

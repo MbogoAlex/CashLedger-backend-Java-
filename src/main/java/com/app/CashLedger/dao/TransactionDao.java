@@ -152,7 +152,11 @@ public class TransactionDao {
             groupByClause = "recipient";
             searchQuery = "t.transactionAmount < 0 ";
         }
-        String hql = "select t."+groupByClause+", t.nickName, t.transactionType, count(abs(t.transactionAmount)) as times, sum(abs(t.transactionAmount)) as totalAmount, sum(abs(t.transactionCost)) from Transaction t " +
+        String hql = "select t."+groupByClause+", " +
+                "t.nickName, t.transactionType, " +
+                "count(abs(t.transactionAmount)) as times, " +
+                "sum(abs(t.transactionAmount)) as totalAmount, " +
+                "sum(abs(t.transactionCost)) from Transaction t " +
                 "left join t.categories tc " +
                 "left join tc.budgets b " +
                 "where t.userAccount.id = :id and " +
@@ -297,7 +301,7 @@ public class TransactionDao {
         return query.getResultList();
     }
 
-    public List<Object[]> getGroupedTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+    public List<Object[]> getGroupedByDateTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
         String hql = "select t.date, " +
                 "count(abs(t.transactionAmount)) as times, " +
                 "sum(case when t.transactionAmount > 0 then abs(t.transactionAmount) else 0 end) as totalMoneyIn, " +
@@ -330,6 +334,48 @@ public class TransactionDao {
 
         return query.getResultList();
     }
+
+    public List<Object[]> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
+        String hql = "select " +
+                "t.nickName, " +
+                "lower(t.transactionType), " +
+                "coalesce(t.entity, '') as entity, " +
+                "count(t) as times, " +
+                "count(case when t.transactionAmount > 0 then 1 end) as timesIn, " +
+                "count(case when t.transactionAmount < 0 then 1 end) as timesOut, " +
+                "sum(case when t.transactionAmount > 0 then t.transactionAmount else 0 end) as totalIn, " +
+                "sum(case when t.transactionAmount < 0 then abs(t.transactionAmount) else 0 end) as totalOut, " +
+                "sum(abs(t.transactionCost)) " +
+                "from Transaction t " +
+                "left join t.categories tc " +
+                "left join tc.budgets b " +
+                "where t.userAccount.id = :id and " +
+                "(:entity is null or " +
+                "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
+                "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or b.id = :budgetId) " +
+                "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
+                "and (t.date >= :startDate) " +
+                "and (t.date <= :endDate) " +
+                "group by coalesce(t.entity, ''), t.nickName, lower(t.transactionType) " +
+                "order by times desc";
+
+        TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
+        query.setParameter("id", userId);
+        query.setParameter("entity", entity == null ? "" : entity.toLowerCase());
+        query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
+        query.setParameter("transactionType", transactionType == null || transactionType.isEmpty() ? null : transactionType.toLowerCase());
+        query.setParameter("startDate", LocalDate.parse(startDate));
+        query.setParameter("endDate", LocalDate.parse(endDate));
+
+        return query.getResultList();
+    }
+
+
+
 
 
 
