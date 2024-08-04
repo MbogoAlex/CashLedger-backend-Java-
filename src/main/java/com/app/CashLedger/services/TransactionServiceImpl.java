@@ -1,15 +1,13 @@
 package com.app.CashLedger.services;
 
 import com.app.CashLedger.dao.CategoryDao;
+import com.app.CashLedger.dao.MessageDao;
 import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.TransactionEditDto;
-import com.app.CashLedger.models.CategoryKeyword;
-import com.app.CashLedger.models.Transaction;
-import com.app.CashLedger.models.TransactionCategory;
-import com.app.CashLedger.models.UserAccount;
+import com.app.CashLedger.models.*;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
@@ -35,17 +33,20 @@ public class TransactionServiceImpl implements TransactionService{
     private final UserAccountDao userAccountDao;
     private final CategoryDao categoryDao;
     private final CategoryService categoryService;
+    private final MessageDao messageDao;
     @Autowired
     public TransactionServiceImpl(
             TransactionDao transactionDao,
             UserAccountDao userAccountDao,
             CategoryDao categoryDao,
-            CategoryService categoryService
+            CategoryService categoryService,
+            MessageDao messageDao
     ) {
         this.transactionDao = transactionDao;
         this.userAccountDao = userAccountDao;
         this.categoryDao = categoryDao;
         this.categoryService = categoryService;
+        this.messageDao = messageDao;
     }
     @Override
     public TransactionDto addTransaction(Transaction transaction) {
@@ -66,21 +67,19 @@ public class TransactionServiceImpl implements TransactionService{
         List<Transaction> transactionsToAdd = new ArrayList<>();
 
         for(TransactionDto transaction : transactions) {
-            if(transactionCodes.contains(transaction.getTransactionCode())) {
-                Transaction transaction1 = new Transaction();
-                transaction1.setTransactionCode(transaction.getTransactionCode());
-                transaction1.setTransactionType(transaction.getTransactionType());
-                transaction1.setTransactionAmount(transaction.getTransactionAmount());
-                transaction1.setTransactionCost(transaction.getTransactionCost());
-                transaction1.setDate(transaction.getDate());
-                transaction1.setTime(transaction.getTime());
-                transaction1.setSender(transaction.getSender());
-                transaction1.setRecipient(transaction.getRecipient());
-                transaction1.setBalance(transaction.getBalance());
-                transaction1.setUserAccount(userAccount);
+            Transaction transaction1 = new Transaction();
+            transaction1.setTransactionCode(transaction.getTransactionCode());
+            transaction1.setTransactionType(transaction.getTransactionType());
+            transaction1.setTransactionAmount(transaction.getTransactionAmount());
+            transaction1.setTransactionCost(transaction.getTransactionCost());
+            transaction1.setDate(transaction.getDate());
+            transaction1.setTime(transaction.getTime());
+            transaction1.setSender(transaction.getSender());
+            transaction1.setRecipient(transaction.getRecipient());
+            transaction1.setBalance(transaction.getBalance());
+            transaction1.setUserAccount(userAccount);
 
-                transactionsToAdd.add(transaction1);
-            }
+            transactionsToAdd.add(transaction1);
         }
 
         List<Transaction> addedTransactions = transactionDao.addTransactions(transactionsToAdd);
@@ -692,11 +691,28 @@ public class TransactionServiceImpl implements TransactionService{
                     transaction.setEntity(recipient);
                 }
 
-                Transaction transaction1 = transactionDao.addTransaction(transaction);
-                List<TransactionCategory> categories = userAccount.getTransactionCategories();
-                for(TransactionCategory transactionCategory : categories) {
-                    categoryService.addTransactionToCategory(transaction1, transactionCategory.getId());
+                List<String> existingTransactionCodes = transactionDao.getExistingTransactionCodes(userId);
+
+                if(!existingTransactionCodes.contains(transaction.getTransactionCode())) {
+                    Message message2 = new Message();
+                    message2.setMessage(messageDto.getBody());
+                    message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
+                    message2.setTime(LocalTime.parse(messageDto.getTime()));
+                    message2.setUserAccount(userAccount);
+                    messageDao.addMessage(message2);
+                    Transaction transaction1 = transactionDao.addTransaction(transaction);
+                    List<TransactionCategory> categories = userAccount.getTransactionCategories();
+
+                    if(!categories.isEmpty()) {
+                        for(TransactionCategory transactionCategory : categories) {
+                            categoryService.addTransactionToCategory(transaction1, transactionCategory.getId());
+                        }
+                    }
                 }
+
+
+
+
             }
         }
 
@@ -705,6 +721,19 @@ public class TransactionServiceImpl implements TransactionService{
 
         return transactionDto;
     }
+
+    @Override
+    public String getMessageTransactionCode(MessageDto message) {
+        Matcher transactionCodeMatcher = Pattern.compile("\\b\\w{10}\\b").matcher(message.getBody());
+        String transactionCode = transactionCodeMatcher.group();
+
+        return transactionCode;
+    }
+    @Override
+    public List<String> getExistingTransactionCodes(Integer userId) {
+        return transactionDao.getExistingTransactionCodes(userId);
+    }
+
     @Transactional
     @Override
     public String updateTransaction(TransactionEditDto transactionEditDto) {

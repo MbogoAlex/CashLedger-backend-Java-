@@ -137,6 +137,11 @@ public class TransactionController {
 
         return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
     }
+    @GetMapping("transaction/codes/{userId}")
+    public ResponseEntity<Response> getExistingTransactionCodes(@PathVariable("userId") Integer userId) {
+        System.out.println("GETTING LATEST TRANSACTION CODES");
+        return buildResponse("transaction", transactionService.getExistingTransactionCodes(userId), "Transaction codes fetched", HttpStatus.OK);
+    }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)

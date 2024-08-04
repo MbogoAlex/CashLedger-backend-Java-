@@ -1,9 +1,11 @@
 package com.app.CashLedger.services;
 
 import com.app.CashLedger.dao.MessageDao;
+import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.models.Message;
+import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.UserAccount;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,15 +24,18 @@ import java.util.stream.Collectors;
 public class MessageServiceImpl implements MessageService{
     private final MessageDao messageDao;
     private final UserAccountDao userAccountDao;
+    private final TransactionDao transactionDao;
     private final TransactionService transactionService;
     @Autowired
     public MessageServiceImpl(
             MessageDao messageDao,
             UserAccountDao userAccountDao,
+            TransactionDao transactionDao,
             TransactionService transactionService
     ) {
         this.messageDao = messageDao;
         this.userAccountDao = userAccountDao;
+        this.transactionDao = transactionDao;
         this.transactionService = transactionService;
     }
     @Transactional
@@ -40,48 +45,28 @@ public class MessageServiceImpl implements MessageService{
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         UserAccount user = userAccountDao.getUser(userId);
 
-        // Get existing messages for the user
-        List<Message> existingMessages = messageDao.getMessagesById(userId);
-
-        // Use a set for quick lookup of existing message bodies
-        Set<String> existingMessageBodies = existingMessages.stream()
-                .map(Message::getMessage)
-                .collect(Collectors.toSet());
-
-        // List to store new messages that are not duplicates
-        List<MessageDto> newMessages = new ArrayList<>();
-
-        for (MessageDto message : messages) {
-            if (!existingMessageBodies.contains(message.getBody())) {
-                newMessages.add(message);
-            }
-        }
-
-        // Process and transform valid new messages to the entity format
-        List<MessageDto> validMessages = processMessages(newMessages, userId);
-
-        List<Message> messagesToAdd = new ArrayList<>();
-
-        for (MessageDto messageDto : validMessages) {
-            Message message = new Message();
-            message.setMessage(messageDto.getBody());
-            message.setDate(LocalDate.parse(messageDto.getDate(), formatter));
-            message.setTime(LocalTime.parse(messageDto.getTime()));
-            message.setUserAccount(user);
-            messagesToAdd.add(message);
-        }
+        //        List<Message> messagesToAdd = new ArrayList<>();
+//
+//        for (MessageDto messageDto : validMessages) {
+//            Message message = new Message();
+//            message.setMessage(messageDto.getBody());
+//            message.setDate(LocalDate.parse(messageDto.getDate(), formatter));
+//            message.setTime(LocalTime.parse(messageDto.getTime()));
+//            message.setUserAccount(user);
+//            messagesToAdd.add(message);
+//        }
 
         // Add the new messages to the database
-        List<Message> addedMessages = messageDao.addMessages(messagesToAdd);
+//        List<Message> addedMessages = messageDao.addMessages(messagesToAdd);
 
         // Transform added messages to DTO format for returning
-        List<MessageDto> addedMessagesProcessed = new ArrayList<>();
+//        List<MessageDto> addedMessagesProcessed = new ArrayList<>();
+//
+//        for (Message message : addedMessages) {
+//            addedMessagesProcessed.add(messageToMessageDto(message));
+//        }
 
-        for (Message message : addedMessages) {
-            addedMessagesProcessed.add(messageToMessageDto(message));
-        }
-
-        return addedMessagesProcessed;
+        return processMessages(messages, userId);
     }
 
 

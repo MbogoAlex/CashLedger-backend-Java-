@@ -27,6 +27,7 @@ public class MessageDao {
         return messages;
     }
 
+
     public List<Message> getMessages() {
         TypedQuery<Message> query = entityManager.createQuery("from Message", Message.class);
         return query.getResultList();

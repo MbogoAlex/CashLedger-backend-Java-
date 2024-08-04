@@ -18,6 +18,10 @@ public interface TransactionService {
 
     TransactionDto extractTransactionDetails(MessageDto message, Integer userId);
 
+    String getMessageTransactionCode(MessageDto message);
+
+    List<String> getExistingTransactionCodes(Integer userId);
+
     String updateTransaction(TransactionEditDto transactionEditDto);
 
     List<TransactionDto> getTransactions(Integer userId, String entity);

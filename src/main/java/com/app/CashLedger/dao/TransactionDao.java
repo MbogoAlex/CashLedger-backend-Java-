@@ -3,6 +3,7 @@ package com.app.CashLedger.dao;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.models.Transaction;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -54,6 +55,13 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("you", "You");
+        return query.getResultList();
+    }
+
+    public List<String> getExistingTransactionCodes(Integer userId) {
+        TypedQuery<String> query = entityManager.createQuery("select t.transactionCode from Transaction t where t.userAccount.id = :userId order by t.date desc", String.class);
+        query.setParameter("userId", userId);
+        query.setMaxResults(1);
         return query.getResultList();
     }
 
@@ -249,7 +257,13 @@ public class TransactionDao {
     public Double getCurrentBalance(Integer userId) {
         TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id", Transaction.class);
         query.setParameter("id", userId);
-        return query.getResultList().get(0).getBalance();
+        Double balance = 0.0;
+        try {
+            balance = query.getResultList().get(0).getBalance();
+        } catch (Exception e) {
+
+        }
+        return balance;
     }
 
     public List<Transaction> getExpenditure(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate) {
