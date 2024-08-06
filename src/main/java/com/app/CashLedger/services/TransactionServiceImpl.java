@@ -693,7 +693,10 @@ public class TransactionServiceImpl implements TransactionService{
 
                 List<String> existingTransactionCodes = transactionDao.getExistingTransactionCodes(userId);
 
-                if(!existingTransactionCodes.contains(transaction.getTransactionCode())) {
+                if(existingTransactionCodes.stream().noneMatch(code -> code.trim().equalsIgnoreCase(transaction.getTransactionCode()))) {
+                    System.out.println("Existing: "+existingTransactionCodes.get(0));
+                    System.out.println("New: "+transaction.getTransactionCode());
+                    System.out.println("ADDING");
                     Message message2 = new Message();
                     message2.setMessage(messageDto.getBody());
                     message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
@@ -709,7 +712,6 @@ public class TransactionServiceImpl implements TransactionService{
                         }
                     }
                 }
-
 
 
 
@@ -730,7 +732,7 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionCode;
     }
     @Override
-    public List<String> getExistingTransactionCodes(Integer userId) {
+    public List<String> getLatestTransactionCode(Integer userId) {
         return transactionDao.getExistingTransactionCodes(userId);
     }
 

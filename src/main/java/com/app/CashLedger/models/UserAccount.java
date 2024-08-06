@@ -23,6 +23,8 @@ public class UserAccount {
     private String lname;
     private String email;
     private String phoneNumber;
+    private String password;
+    private Role role;
     @OneToMany(mappedBy = "userAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
     @OneToMany(mappedBy = "userAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

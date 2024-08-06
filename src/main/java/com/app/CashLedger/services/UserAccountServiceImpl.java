@@ -6,9 +6,11 @@ import com.app.CashLedger.dto.RegistrationDetailsDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.UserDetailsDto;
 import com.app.CashLedger.models.Message;
+import com.app.CashLedger.models.Role;
 import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,18 +19,25 @@ import java.util.List;
 @Service
 public class UserAccountServiceImpl implements UserAccountService{
     private final UserAccountDao userAccountDao;
+    private final PasswordEncoder passwordEncoder;
     @Autowired
-    public UserAccountServiceImpl(UserAccountDao userAccountDao) {
+    public UserAccountServiceImpl(
+            UserAccountDao userAccountDao,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userAccountDao = userAccountDao;
+        this.passwordEncoder = passwordEncoder;
     }
     @Transactional
     @Override
-    public UserDetailsDto addUser(RegistrationDetailsDto registrationDetailsDto) {
+    public UserDetailsDto registerUser(RegistrationDetailsDto registrationDetailsDto) {
         UserAccount userAccount = UserAccount.builder()
                 .fname(registrationDetailsDto.getFname())
                 .lname(registrationDetailsDto.getLname())
                 .email(registrationDetailsDto.getEmail())
                 .phoneNumber(registrationDetailsDto.getPhoneNumber())
+                .password(passwordEncoder.encode(registrationDetailsDto.getPassword()))
+                .role(Role.USER)
                 .messages(new ArrayList<>())
                 .transactions(new ArrayList<>())
                 .build();

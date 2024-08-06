@@ -129,8 +129,8 @@ public class MessageServiceImpl implements MessageService{
                 transactionService.extractTransactionDetails(messageDto, userId);
                 processedMessages.add(messageDto);
             } catch (Exception e) {
-                System.out.println("ERROR: "+e.toString());
-                System.out.println(message);
+//                System.out.println("ERROR: "+e.toString());
+//                System.out.println(message);
                 errMsg.add(message);
             }
         }

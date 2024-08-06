@@ -20,7 +20,7 @@ public interface TransactionService {
 
     String getMessageTransactionCode(MessageDto message);
 
-    List<String> getExistingTransactionCodes(Integer userId);
+    List<String> getLatestTransactionCode(Integer userId);
 
     String updateTransaction(TransactionEditDto transactionEditDto);
 

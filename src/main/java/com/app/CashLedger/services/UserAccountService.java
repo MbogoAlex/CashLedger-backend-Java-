@@ -5,7 +5,7 @@ import com.app.CashLedger.dto.UserDetailsDto;
 import java.util.List;
 
 public interface UserAccountService {
-    UserDetailsDto addUser(RegistrationDetailsDto registrationDetailsDto);
+    UserDetailsDto registerUser(RegistrationDetailsDto registrationDetailsDto);
 
     UserDetailsDto updateUser(RegistrationDetailsDto registrationDetailsDto, Integer userId);
 

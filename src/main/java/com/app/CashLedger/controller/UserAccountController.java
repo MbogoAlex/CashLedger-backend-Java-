@@ -1,5 +1,6 @@
 package com.app.CashLedger.controller;
 
+import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.RegistrationDetailsDto;
 import com.app.CashLedger.models.Response;
 import com.app.CashLedger.models.UserAccount;
@@ -17,14 +18,13 @@ import static java.util.Map.of;
 @RequestMapping("/api/")
 public class UserAccountController {
     private final UserAccountService userAccountService;
+    private final UserAccountDao userAccountDao;
     @Autowired
-    public UserAccountController(UserAccountService userAccountService) {
+    public UserAccountController(UserAccountService userAccountService, UserAccountDao userAccountDao) {
         this.userAccountService = userAccountService;
+        this.userAccountDao = userAccountDao;
     }
-    @PostMapping("user")
-    public ResponseEntity<Response> addUser(@RequestBody RegistrationDetailsDto registrationDetailsDto) {
-        return buildResponse("user", userAccountService.addUser(registrationDetailsDto), "User added", HttpStatus.CREATED);
-    }
+
     @PutMapping("user/{id}")
     public ResponseEntity<Response> updateUser(@RequestBody RegistrationDetailsDto registrationDetailsDto, @PathVariable("id") Integer userId) {
         return buildResponse("user", userAccountService.updateUser(registrationDetailsDto, userId), "User updated", HttpStatus.CREATED);

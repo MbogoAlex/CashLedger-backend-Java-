@@ -1,16 +1,15 @@
 package com.app.CashLedger.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegistrationDetailsDto {
-    private String fname;
-    private String lname;
-    private String email;
+public class LoginDto {
     private String phoneNumber;
     private String password;
 }

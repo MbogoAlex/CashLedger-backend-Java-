@@ -36,4 +36,30 @@ public class UserAccountDao {
         TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount", UserAccount.class);
         return query.getResultList();
     }
+
+    public UserAccount findByEmail(String email) {
+        TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount where email = :email", UserAccount.class);
+        query.setParameter("email", email);
+        return query.getSingleResult();
+    }
+
+    public UserAccount findByPhoneNumber(String phoneNumber) {
+        TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount where phoneNumber = :phoneNumber", UserAccount.class);
+        query.setParameter("phoneNumber", phoneNumber);
+        return query.getSingleResult();
+    }
+
+    public Boolean existsByEmail(String email) {
+        TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount where email = :email", UserAccount.class);
+        query.setParameter("email", email);
+        List<UserAccount> results = query.getResultList();
+        return !results.isEmpty();
+    }
+
+    public Boolean existsByPhoneNumber(String phoneNumber) {
+        TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount where phoneNumber = :phoneNumber", UserAccount.class);
+        query.setParameter("phoneNumber", phoneNumber);
+        List<UserAccount> results = query.getResultList();
+        return !results.isEmpty();
+    }
 }

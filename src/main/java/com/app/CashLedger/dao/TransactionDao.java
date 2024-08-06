@@ -61,6 +61,12 @@ public class TransactionDao {
     public List<String> getExistingTransactionCodes(Integer userId) {
         TypedQuery<String> query = entityManager.createQuery("select t.transactionCode from Transaction t where t.userAccount.id = :userId order by t.date desc", String.class);
         query.setParameter("userId", userId);
+        return query.getResultList();
+    }
+
+    public List<String> getLatestTransactionCode(Integer userId) {
+        TypedQuery<String> query = entityManager.createQuery("select t.transactionCode from Transaction t where t.userAccount.id = :userId order by t.date desc", String.class);
+        query.setParameter("userId", userId);
         query.setMaxResults(1);
         return query.getResultList();
     }
