@@ -2,10 +2,9 @@ package com.app.CashLedger.controller;
 
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.*;
-import com.app.CashLedger.models.Message;
-import com.app.CashLedger.models.Response;
-import com.app.CashLedger.models.Transaction;
-import com.app.CashLedger.models.UserAccount;
+import com.app.CashLedger.dto.payment.SubscriptionDetails;
+import com.app.CashLedger.dto.profile.PasswordUpdatePayload;
+import com.app.CashLedger.models.*;
 import com.app.CashLedger.security.JWTGenerator;
 import com.app.CashLedger.services.UserAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -62,7 +58,11 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String token = jwtGenerator.generateToken(authentication);
 
+            System.out.println("PHONE NUMBER:");
+            System.out.println(loginDto.getPhoneNumber());
+
             UserAccount user = userAccountDao.findByPhoneNumber(loginDto.getPhoneNumber());
+
 
             Map<String, Object> tokenAndUserMap = new HashMap<>();
             tokenAndUserMap.put("token", token);
@@ -71,6 +71,16 @@ public class AuthController {
             return buildResponse("user", tokenAndUserMap, "Login successful", HttpStatus.OK);
         } catch (AuthenticationException e) {
             return buildResponse(null, null, "Invalid email or password", HttpStatus.UNAUTHORIZED);
+        }
+    }
+    @PutMapping("update/password")
+    public ResponseEntity<Response> updatePassword(@RequestBody PasswordUpdatePayload passwordUpdatePayload) {
+        try {
+            UserAccount user = userAccountDao.findByPhoneNumber(passwordUpdatePayload.getPhoneNumber());
+            System.out.println(user.getFname());
+            return buildResponse("user", userAccountService.updatePassword(passwordUpdatePayload), "Password updated", HttpStatus.OK);
+        } catch (Exception e) {
+            return buildResponse(null, null, "Invalid phone number", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -90,14 +100,23 @@ public class AuthController {
         List<Transaction> transactions = userAccount.getTransactions();
         List<MessageDto> transformedMessages = new ArrayList<>();
         List<TransactionDto> transformedTransactions = new ArrayList<>();
+        List<SubscriptionDetails> subscriptionDetails = new ArrayList<>();
 
-        for(Message message : messages) {
-            transformedMessages.add(messageToMessageDto(message));
-        }
+//        for(Message message : messages) {
+//            transformedMessages.add(messageToMessageDto(message));
+//        }
 
-        for(Transaction transaction : transactions) {
-            transformedTransactions.add(transactionToTransactionDto(transaction));
-        }
+//        if(userAccount.getPayments() != null) {
+//            for(Payment payment : userAccount.getPayments()) {
+//                subscriptionDetails.add(paymentToPaymentDetails(payment));
+//            }
+//        }
+//
+//        for(Transaction transaction : transactions) {
+//            transformedTransactions.add(transactionToTransactionDto(transaction));
+//        }
+
+
 
         UserDetailsDto userDetailsDto = UserDetailsDto.builder()
                 .id(userAccount.getId())
@@ -105,8 +124,9 @@ public class AuthController {
                 .lname(userAccount.getLname())
                 .email(userAccount.getEmail())
                 .phoneNumber(userAccount.getPhoneNumber())
-                .messages(transformedMessages)
-                .transactions(transformedTransactions)
+                .messages(new ArrayList<>())
+                .transactions(new ArrayList<>())
+                .payments(new ArrayList<>())
                 .build();
         return userDetailsDto;
     }
@@ -134,5 +154,17 @@ public class AuthController {
                 .balance(transaction.getBalance())
                 .build();
         return transactionDto;
+    }
+
+    SubscriptionDetails paymentToPaymentDetails(Payment payment) {
+        SubscriptionDetails subscriptionDetails = SubscriptionDetails.builder()
+                .id(payment.getId())
+                .month(payment.getMonth())
+                .paidAt(payment.getPaidAt())
+                .expiredAt(payment.getExpiredAt())
+                .sessionExpired(payment.getPaidAt().isAfter(payment.getExpiredAt()))
+                .userId(payment.getUserAccount().getId())
+                .build();
+        return subscriptionDetails;
     }
 }

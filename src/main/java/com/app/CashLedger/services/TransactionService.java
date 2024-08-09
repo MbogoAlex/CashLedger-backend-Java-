@@ -37,6 +37,7 @@ public interface TransactionService {
     Map<Object, Object> getExpenditure(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate);
 
     Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate);
+    Map<Object, Object> getGroupedByMonthAndYearTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String month, String year);
 
     byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException;
 

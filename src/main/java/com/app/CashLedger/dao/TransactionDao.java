@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.lang.reflect.Type;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 @Repository
@@ -261,7 +262,7 @@ public class TransactionDao {
     }
 
     public Double getCurrentBalance(Integer userId) {
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id", Transaction.class);
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
         query.setParameter("id", userId);
         Double balance = 0.0;
         try {
@@ -354,6 +355,68 @@ public class TransactionDao {
 
         return query.getResultList();
     }
+
+    public List<Object[]> getGroupedByMonthAndYearTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String monthName, String year) {
+        // Convert month name to number
+        int month = Month.valueOf(monthName.toUpperCase()).getValue();
+
+        // Log parameters for debugging
+        System.out.println("Query Parameters:");
+        System.out.println("User ID: " + userId);
+        System.out.println("Entity: " + entity);
+        System.out.println("Category ID: " + categoryId);
+        System.out.println("Budget ID: " + budgetId);
+        System.out.println("Transaction Type: " + transactionType);
+        System.out.println("Month: " + monthName + " (" + month + ")");
+        System.out.println("Year: " + year);
+
+        String hql = "select t.date, " +
+                "TO_CHAR(t.date, 'Month') as month, " +
+                "TO_CHAR(t.date, 'YYYY') as year, " +
+                "count(abs(t.transactionAmount)) as times, " +
+                "sum(case when t.transactionAmount > 0 then abs(t.transactionAmount) else 0 end) as totalMoneyIn, " +
+                "sum(case when t.transactionAmount < 0 then abs(t.transactionAmount) else 0 end) as totalMoneyOut, " +
+                "sum(abs(t.transactionCost)) as totalCost " +
+                "from Transaction t " +
+                "left join t.categories tc " +
+                "left join tc.budgets b " +
+                "where t.userAccount.id = :id and " +
+                "(:entity is null or " +
+                "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
+                "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
+                "and (:categoryId is null or tc.id = :categoryId) " +
+                "and (:budgetId is null or b.id = :budgetId) " +
+                "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
+                "and EXTRACT(MONTH FROM t.date) = :month " +
+                "and EXTRACT(YEAR FROM t.date) = :year " +
+                "group by t.date, TO_CHAR(t.date, 'Month'), TO_CHAR(t.date, 'YYYY') " +
+                "order by t.date desc";
+
+        TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
+        query.setParameter("id", userId);
+        query.setParameter("entity", entity == null ? "" : entity.toLowerCase());
+        query.setParameter("categoryId", categoryId);
+        query.setParameter("budgetId", budgetId);
+        query.setParameter("transactionType", transactionType == null || transactionType.isEmpty() ? null : transactionType.toLowerCase());
+        query.setParameter("month", month); // Using the converted month number
+        query.setParameter("year", Integer.parseInt(year)); // Converting year to integer
+
+        List<Object[]> results = query.getResultList();
+
+        // Log results for debugging
+        System.out.println("Results Size: " + results.size());
+        for (Object[] result : results) {
+            System.out.println("Date: " + result[0] + ", Month: " + result[1] + ", Year: " + result[2] + ", Times: " + result[3] + ", Total Money In: " + result[4] + ", Total Money Out: " + result[5] + ", Total Cost: " + result[6]);
+        }
+
+        return results;
+    }
+
+
+
+
+
 
     public List<Object[]> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
         String hql = "select " +

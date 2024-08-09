@@ -29,10 +29,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(
-                                "/api/auth/register",
-                                "/api/auth/login",
+                                "/api/auth/**",
+                                "/api/payment/ipn",
                                 "/swagger-ui**",
-                                "/swagger-ui/**"
+                                "/swagger-ui/**",
+                                "/api/subscription/**",
+                                "https://pay.pesapal.com/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

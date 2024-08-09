@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -691,35 +690,66 @@ public class TransactionServiceImpl implements TransactionService{
                     transaction.setEntity(recipient);
                 }
 
-                List<String> existingTransactionCodes = transactionDao.getExistingTransactionCodes(userId);
+                var entity = "";
+                if(transactionAmount > 0) {
+                    entity = sender;
+                } else if(transactionAmount < 0) {
+                    entity = recipient;
+                }
 
-                if(existingTransactionCodes.stream().noneMatch(code -> code.trim().equalsIgnoreCase(transaction.getTransactionCode()))) {
-                    System.out.println("Existing: "+existingTransactionCodes.get(0));
-                    System.out.println("New: "+transaction.getTransactionCode());
-                    System.out.println("ADDING");
+                List<String> existingTransactionCodes = transactionDao.getExistingTransactionCodes(userId);
+                assert entity != null;
+                List<Transaction> transactions = transactionDao.getTransactions(userId, entity);
+
+                if(!existingTransactionCodes.isEmpty()) {
+                    if(existingTransactionCodes.stream().noneMatch(code -> code.trim().equalsIgnoreCase(transaction.getTransactionCode()))) {
+                        var nickname = "";
+                        if(!transactions.isEmpty()) {
+                            if(transactions.get(0).getNickName() != null) {
+                                nickname = transactions.get(0).getNickName();
+                            }
+                        }
+                        System.out.println("Existing: "+existingTransactionCodes.get(0));
+                        System.out.println("New: "+transaction.getTransactionCode());
+                        System.out.println("ADDING");
+                        Message message2 = new Message();
+                        message2.setMessage(messageDto.getBody());
+                        message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
+                        message2.setTime(LocalTime.parse(messageDto.getTime()));
+                        message2.setUserAccount(userAccount);
+                        messageDao.addMessage(message2);
+                        if(!nickname.isEmpty() && !nickname.isBlank()) {
+                            transaction.setNickName(nickname);
+                        }
+                        Transaction transaction1 = transactionDao.addTransaction(transaction);
+                        List<TransactionCategory> categories = userAccount.getTransactionCategories();
+
+                        if(!categories.isEmpty()) {
+                            for(TransactionCategory transactionCategory : categories) {
+                                categoryService.addTransactionToCategory(transaction1, transactionCategory.getId());
+                            }
+                        }
+                    }
+                } else {
+                    var nickname = "";
+                    if(!transactions.isEmpty()) {
+                        if(transactions.get(0).getNickName() != null) {
+                            nickname = transactions.get(0).getNickName();
+                        }
+                    }
                     Message message2 = new Message();
                     message2.setMessage(messageDto.getBody());
                     message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
                     message2.setTime(LocalTime.parse(messageDto.getTime()));
                     message2.setUserAccount(userAccount);
                     messageDao.addMessage(message2);
-                    Transaction transaction1 = transactionDao.addTransaction(transaction);
-                    List<TransactionCategory> categories = userAccount.getTransactionCategories();
-
-                    if(!categories.isEmpty()) {
-                        for(TransactionCategory transactionCategory : categories) {
-                            categoryService.addTransactionToCategory(transaction1, transactionCategory.getId());
-                        }
+                    if(!nickname.isEmpty() && !nickname.isBlank()) {
+                        transaction.setNickName(nickname);
                     }
+                    transactionDao.addTransaction(transaction);
                 }
-
-
-
             }
         }
-
-
-
 
         return transactionDto;
     }
@@ -956,6 +986,37 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
+    public Map<Object, Object> getGroupedByMonthAndYearTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String month, String year) {
+        List<Object[]> result = transactionDao.getGroupedByMonthAndYearTransactions(userId, entity, categoryId, budgetId, transactionType, month, year);
+        List<Map<String, Object>> transformedResult = new ArrayList<>();
+        Map<Object, Object> transactionsMap = new HashMap<>();
+        Double totalMoneyIn = 0.0;
+        Double totalMoneyOut = 0.0;
+        for (Object[] row : result) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("date", row[0]);
+            map.put("month", row[1]);
+            map.put("year", row[2]);
+            map.put("times", row[3]);
+            map.put("moneyIn", row[4]);
+            map.put("moneyOut", row[5]);
+
+            totalMoneyIn = totalMoneyIn + (Double) row[4];
+            totalMoneyOut = totalMoneyOut + Math.abs((Double) row[5]);
+
+            map.put("transactionCost", row[6]);
+            transformedResult.add(map);
+        }
+
+        transactionsMap.put("totalMoneyIn", totalMoneyIn);
+        transactionsMap.put("totalMoneyOut", totalMoneyOut);
+
+        transactionsMap.put("transactions", transformedResult);
+
+        return transactionsMap;
+    }
+
+    @Override
     public byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException {
         // Path to the JRXML file
 //        String jrxmlPath = "/home/mbogo/Desktop/CashLedger/CashLedger/src/main/java/com/app/CashLedger/reportModel/AllTransactionsReportModel.jrxml";
@@ -1078,4 +1139,6 @@ public class TransactionServiceImpl implements TransactionService{
                 .build();
         return transactionDto;
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.app.CashLedger.dto;
 
+import com.app.CashLedger.dto.payment.SubscriptionDetails;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,5 @@ public class UserDetailsDto {
     private String phoneNumber;
     private List<MessageDto> messages;
     private List<TransactionDto> transactions;
+    private List<SubscriptionDetails> payments;
 }

@@ -68,6 +68,18 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.getGroupedByDateTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
+    @GetMapping("transaction/grouped/month/year/{id}")
+    public ResponseEntity<Response> getGroupedByMonthAndYearTransactions(
+            @PathVariable("id") Integer userId,
+            @RequestParam(value = "entity", required = false) String entity,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "month", required = false) String month,
+            @RequestParam(value = "year", required = false) String year
+    ) {
+        return buildResponse("transaction", transactionService.getGroupedByMonthAndYearTransactions(userId, entity, categoryId, budgetId, transactionType, month, year), "Transactions fetched", HttpStatus.OK);
+    }
     @GetMapping("transaction/grouped/entity/{id}")
     public ResponseEntity<Response> getGroupedByEntityTransactions(
             @PathVariable("id") Integer userId,

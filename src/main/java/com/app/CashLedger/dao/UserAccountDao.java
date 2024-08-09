@@ -3,6 +3,7 @@ package com.app.CashLedger.dao;
 import com.app.CashLedger.models.UserAccount;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -15,16 +16,17 @@ public class UserAccountDao {
     public UserAccountDao(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
-
+    @Transactional
     public UserAccount saveUser(UserAccount userAccount) {
         entityManager.persist(userAccount);
         return userAccount;
     }
-
+    @Transactional
     public UserAccount updateUser(UserAccount userAccount) {
-        entityManager.merge(userAccount);
-        return userAccount;
+        UserAccount managedUserAccount = entityManager.merge(userAccount);
+        return managedUserAccount;
     }
+
 
     public UserAccount getUser(Integer id) {
         TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount where id = :id", UserAccount.class);

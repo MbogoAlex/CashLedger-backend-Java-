@@ -5,15 +5,15 @@ import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.RegistrationDetailsDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.UserDetailsDto;
-import com.app.CashLedger.models.Message;
-import com.app.CashLedger.models.Role;
-import com.app.CashLedger.models.Transaction;
-import com.app.CashLedger.models.UserAccount;
+import com.app.CashLedger.dto.payment.SubscriptionDetails;
+import com.app.CashLedger.dto.profile.PasswordUpdatePayload;
+import com.app.CashLedger.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Service
@@ -38,6 +38,7 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .phoneNumber(registrationDetailsDto.getPhoneNumber())
                 .password(passwordEncoder.encode(registrationDetailsDto.getPassword()))
                 .role(Role.USER)
+                .createdAt(LocalDateTime.now())
                 .messages(new ArrayList<>())
                 .transactions(new ArrayList<>())
                 .build();
@@ -50,9 +51,23 @@ public class UserAccountServiceImpl implements UserAccountService{
         userAccount.setEmail(registrationDetailsDto.getEmail());
         userAccount.setFname(registrationDetailsDto.getFname());
         userAccount.setLname(registrationDetailsDto.getLname());
-        userAccount.setPhoneNumber(registrationDetailsDto.getPhoneNumber());
         return userAccountToUserDetailsDto(userAccountDao.updateUser(userAccount));
     }
+    @Transactional
+    @Override
+    public UserDetailsDto updatePassword(PasswordUpdatePayload passwordUpdatePayload) {
+        System.out.println("UPDATING PASSWORD");
+        System.out.println("PASSWORD" + passwordUpdatePayload.getNewPassword());
+        UserAccount userAccount = userAccountDao.findByPhoneNumber(passwordUpdatePayload.getPhoneNumber());
+        System.out.println("STUCK HERE-1");
+        userAccount.setPassword(passwordEncoder.encode(passwordUpdatePayload.getNewPassword()));
+        System.out.println("STUCK HERE-2");
+        System.out.println(userAccount);
+        UserAccount updatedUser = userAccountDao.updateUser(userAccount);  // Use the managed instance
+        System.out.println("STUCK HERE-3");
+        return userAccountToUserDetailsDto(updatedUser);
+    }
+
 
     @Override
     public UserDetailsDto getUser(Integer userId) {
@@ -72,8 +87,10 @@ public class UserAccountServiceImpl implements UserAccountService{
     private UserDetailsDto userAccountToUserDetailsDto(UserAccount userAccount) {
         List<Message> messages = userAccount.getMessages();
         List<Transaction> transactions = userAccount.getTransactions();
+        List<Payment> payments = userAccount.getPayments();
         List<MessageDto> transformedMessages = new ArrayList<>();
         List<TransactionDto> transformedTransactions = new ArrayList<>();
+        List<SubscriptionDetails> subscriptionDetails = new ArrayList<>();
 
         for(Message message : messages) {
             transformedMessages.add(messageToMessageDto(message));
@@ -83,6 +100,14 @@ public class UserAccountServiceImpl implements UserAccountService{
             transformedTransactions.add(transactionToTransactionDto(transaction));
         }
 
+        if(payments != null) {
+            for(Payment payment : payments) {
+                subscriptionDetails.add(paymentToPaymentDetails(payment));
+            }
+        }
+
+
+
         UserDetailsDto userDetailsDto = UserDetailsDto.builder()
                 .id(userAccount.getId())
                 .fname(userAccount.getFname())
@@ -91,6 +116,7 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .phoneNumber(userAccount.getPhoneNumber())
                 .messages(transformedMessages)
                 .transactions(transformedTransactions)
+                .payments(subscriptionDetails)
                 .build();
         return userDetailsDto;
     }
@@ -118,5 +144,17 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .balance(transaction.getBalance())
                 .build();
         return transactionDto;
+    }
+
+    SubscriptionDetails paymentToPaymentDetails(Payment payment) {
+        SubscriptionDetails subscriptionDetails = SubscriptionDetails.builder()
+                .id(payment.getId())
+                .month(payment.getMonth())
+                .paidAt(payment.getPaidAt())
+                .expiredAt(payment.getExpiredAt())
+                .sessionExpired(payment.getPaidAt().isAfter(payment.getExpiredAt()))
+                .userId(payment.getUserAccount().getId())
+                .build();
+        return subscriptionDetails;
     }
 }

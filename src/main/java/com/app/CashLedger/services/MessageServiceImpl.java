@@ -44,28 +44,6 @@ public class MessageServiceImpl implements MessageService{
         System.out.println("RECEIVED " + messages.size() + " messages");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         UserAccount user = userAccountDao.getUser(userId);
-
-        //        List<Message> messagesToAdd = new ArrayList<>();
-//
-//        for (MessageDto messageDto : validMessages) {
-//            Message message = new Message();
-//            message.setMessage(messageDto.getBody());
-//            message.setDate(LocalDate.parse(messageDto.getDate(), formatter));
-//            message.setTime(LocalTime.parse(messageDto.getTime()));
-//            message.setUserAccount(user);
-//            messagesToAdd.add(message);
-//        }
-
-        // Add the new messages to the database
-//        List<Message> addedMessages = messageDao.addMessages(messagesToAdd);
-
-        // Transform added messages to DTO format for returning
-//        List<MessageDto> addedMessagesProcessed = new ArrayList<>();
-//
-//        for (Message message : addedMessages) {
-//            addedMessagesProcessed.add(messageToMessageDto(message));
-//        }
-
         return processMessages(messages, userId);
     }
 
@@ -129,8 +107,6 @@ public class MessageServiceImpl implements MessageService{
                 transactionService.extractTransactionDetails(messageDto, userId);
                 processedMessages.add(messageDto);
             } catch (Exception e) {
-//                System.out.println("ERROR: "+e.toString());
-//                System.out.println(message);
                 errMsg.add(message);
             }
         }
