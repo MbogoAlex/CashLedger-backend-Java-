@@ -39,7 +39,7 @@ public class PaymentServiceImpl implements PaymentService{
     private final String CONSUMER_SECRET = "sO+0e+mvfzKhHy0jFmkMCwufxG0=";
 
     private final String CALLBACK_URL = "https://github.com/MbogoAlex";
-    private final String notificationId = "7faac0f8-7dfd-4bf4-84f3-dce4211c93ec";
+    private final String notificationId = "5f1d6a44-c602-4232-80ba-dce3d1ec34fa";
     @Override
     public Boolean getSubscriptionStatus(Integer userId) {
         List<Payment> payments = paymentDao.getLatestPayment(userId);
