@@ -748,7 +748,7 @@ public class TransactionServiceImpl implements TransactionService{
 
                 }
             }
-            addMessages(messagesToAdd);
+//            addMessages(messagesToAdd);
             addTransactions(transactionsToAdd, userAccount);
         }
 
