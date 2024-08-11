@@ -272,7 +272,7 @@ public class TransactionDao {
     }
 
     public Double getCurrentBalance(Integer userId) {
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date, time desc", Transaction.class);
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date, time asc", Transaction.class);
         query.setParameter("id", userId);
         Double balance = 0.0;
         try {
