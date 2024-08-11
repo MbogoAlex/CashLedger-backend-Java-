@@ -14,7 +14,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "transaction")
+@Table(name = "transaction", indexes = {
+        @Index(name = "idx_transaction_date", columnList = "date"),
+        @Index(name = "idx_sender", columnList = "sender"),
+        @Index(name = "idx_recipient", columnList = "recipient"),
+        @Index(name = "idx_entity", columnList = "entity"),
+        @Index(name = "idx_user_id", columnList = "user_id"),
+})
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

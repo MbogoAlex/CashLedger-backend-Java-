@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "user_account")
+@Table(name = "user_account", indexes = @Index(name = "idx_user_account_email_phonenumber", columnList = "email, phone_number"))
 public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

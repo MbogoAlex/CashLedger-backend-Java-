@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 
@@ -140,14 +141,12 @@ public class TransactionController {
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) throws JRException, ParseException {
-        byte[] pdfData = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+        ByteArrayOutputStream reportStream = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "AllTransactionsReport.pdf");
-        headers.setContentLength(pdfData.length);
 
-        return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
+        return new ResponseEntity<>(reportStream.toByteArray(), headers, HttpStatus.OK);
     }
     @GetMapping("transaction/latest-code/{userId}")
     public ResponseEntity<Response> getLatestTransactionCodes(@PathVariable("userId") Integer userId) {

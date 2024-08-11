@@ -9,6 +9,10 @@ import com.app.CashLedger.models.*;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.pdf.JRPdfExporter;
+import net.sf.jasperreports.pdf.SimplePdfExporterConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1014,12 +1018,8 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionsMap;
     }
 
-    @Override
-    public byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException {
-        // Path to the JRXML file
-//        String jrxmlPath = "/home/mbogo/Desktop/CashLedger/CashLedger/src/main/java/com/app/CashLedger/reportModel/AllTransactionsReportModel.jrxml";
+    public ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException {
 
-        // Get user account and transactions
         UserAccount userAccount = userAccountDao.getUser(userId);
         List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
         List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
@@ -1038,6 +1038,17 @@ public class TransactionServiceImpl implements TransactionService{
         Double totalIn = 0.0;
         Double totalOut = 0.0;
         Double totalTransactionCost = 0.0;
+
+        String owner = "";
+        if(userAccount.getFname() == null && userAccount.getLname() == null) {
+            owner = userAccount.getPhoneNumber();
+        } else if(userAccount.getFname() == null && userAccount.getLname() != null) {
+            owner = userAccount.getLname();
+        } else if(userAccount.getFname() != null && userAccount.getLname() == null) {
+            owner = userAccount.getFname();
+        } else if(userAccount.getFname() != null && userAccount.getLname() != null) {
+            owner = userAccount.getFname()+" "+userAccount.getLname();
+        }
 
         // Process each transaction
         for (Transaction transaction : transactions) {
@@ -1079,7 +1090,7 @@ public class TransactionServiceImpl implements TransactionService{
 
         // Parameters for the report
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("owner", userAccount.getFname() + " " + userAccount.getLname() + ", " + userAccount.getPhoneNumber());
+        parameters.put("owner", owner);
         parameters.put("startDate", formattedStartDate);
         parameters.put("endDate", formattedEndDate);
         parameters.put("totalIn", "Ksh" + String.format("%.2f", totalIn));
@@ -1098,15 +1109,21 @@ public class TransactionServiceImpl implements TransactionService{
             }
             JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
             JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            JRPdfExporter exporter = new JRPdfExporter();
+            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+            configuration.setCompressed(true);
+            exporter.setConfiguration(configuration);
+            exporter.setExporterInput(new SimpleExporterInput(print));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
+            exporter.exportReport();
 
-            JasperExportManager.exportReportToPdfStream(print, baos);
-            return baos.toByteArray();
+//            JasperExportManager.exportReportToPdfStream(print, baos);
+            return byteArrayOutputStream;
         } catch (Exception e) {
             e.printStackTrace();
             throw new JRException("Error generating report", e);
         }
-
-
 
     }
 

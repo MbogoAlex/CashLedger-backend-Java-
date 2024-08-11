@@ -225,7 +225,7 @@
     <columnFooter height="45" splitType="Stretch"/>
     <pageFooter height="54" splitType="Stretch">
         <element kind="staticText" uuid="251b06d3-70b8-47b3-8316-cf6202ed5f1d" x="8" y="10" width="322" height="30" forecolor="#1F8C31" bold="true" hTextAlign="Left" vTextAlign="Middle">
-            <text><![CDATA[Send your enquiries/request to: pesarecords@gmail.com]]></text>
+            <text><![CDATA[Send your enquiries/request to: hubkiwitech@gmail.com]]></text>
         </element>
         <element kind="textField" uuid="c56851e4-9b42-45c0-9007-1f686f5fbf61" x="450" y="10" width="100" height="30" vTextAlign="Middle">
             <expression><![CDATA[$V{PAGE_NUMBER}]]></expression>
