@@ -547,5 +547,8 @@ public class TransactionDao {
     }
 
 
-
+    public void flushAndClear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
 }
