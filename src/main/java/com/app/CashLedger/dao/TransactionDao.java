@@ -1,7 +1,9 @@
 package com.app.CashLedger.dao;
 
 import com.app.CashLedger.dto.TransactionDto;
+import com.app.CashLedger.models.Budget;
 import com.app.CashLedger.models.Transaction;
+import com.app.CashLedger.models.TransactionCategory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
@@ -12,7 +14,9 @@ import java.lang.reflect.Type;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class TransactionDao {
@@ -56,6 +60,12 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("you", "You");
+        return query.getResultList();
+    }
+
+    public List<Transaction> getAllTransactions(Integer userId){
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
+        query.setParameter("id", userId);
         return query.getResultList();
     }
 
@@ -457,8 +467,84 @@ public class TransactionDao {
         return query.getResultList();
     }
 
+    String firstTransactionDate(Integer userId) {
+        List<Transaction> transactions = getAllTransactions(userId);
+        Transaction firstTransaction = transactions.get(transactions.size() - 1);
+        return firstTransaction.getDate().toString();
+    }
 
+    List<Transaction> latestTransactions(Integer userId) {
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
+        query.setParameter("id", userId);
+        query.setMaxResults(2);
+        return query.getResultList();
+    }
 
+    List<Budget> budgets(Integer userId) {
+        TypedQuery<Budget> query = entityManager.createQuery("from Budget where userAccount.id = :id", Budget.class);
+        query.setParameter("id", userId);
+        query.setMaxResults(2);
+        return query.getResultList();
+    }
+
+    List<TransactionCategory> categories(Integer userId) {
+        TypedQuery<TransactionCategory> query = entityManager.createQuery("from TransactionCategory t where t.userAccount.id = :id", TransactionCategory.class);
+        query.setParameter("id", userId);
+        query.setMaxResults(2);
+        return query.getResultList();
+    }
+
+    Map<String, Object> getTodayExpenditure(Integer userId, String date) {
+        Map<String, Object> todayExpenditure = new HashMap<>();
+
+        // Query to sum the transaction amounts for the given date
+        TypedQuery<Object[]> query = entityManager.createQuery(
+                "select " +
+                        "sum(case when t.transactionAmount > 0 then t.transactionAmount else 0 end) as totalIn, " +
+                        "sum(case when t.transactionAmount < 0 then abs(t.transactionAmount) else 0 end) as totalOut " +
+                        "from Transaction t " +
+                        "where t.userAccount.id = :userId " +
+                        "and t.date = :date",
+                Object[].class
+        );
+
+        query.setParameter("userId", userId);
+        query.setParameter("date", LocalDate.parse(date));
+
+        // Execute the query
+        Object[] result = query.getSingleResult();
+
+        System.out.println("RESULT:");
+        System.out.println(result);
+
+        // Initialize default values
+        Double totalIn = result[0] != null ? (Double) result[0] : 0.0;
+        Double totalOut = result[1] != null ? (Double) result[1] : 0.0;
+
+        // Populate the map with results
+        todayExpenditure.put("totalIn", totalIn);
+        todayExpenditure.put("totalOut", totalOut);
+
+        return todayExpenditure;
+    }
+
+    public Map<String, Object> getDashboardDetails(Integer userId, String date) {
+        Map<String, Object> dashboardDetails = new HashMap<>();
+        String firstTransactionDate = firstTransactionDate(userId);
+        Double accountBalance = getCurrentBalance(userId);
+        List<Transaction> latestTransactions = latestTransactions(userId);
+        List<TransactionCategory> categories = categories(userId);
+        List<Budget> budgets = budgets(userId);
+        Map<String, Object> todayExpenditure = getTodayExpenditure(userId, date);
+
+        dashboardDetails.put("firstTransactionDate", firstTransactionDate);
+        dashboardDetails.put("accountBalance", accountBalance);
+        dashboardDetails.put("latestTransactions", latestTransactions);
+        dashboardDetails.put("categories", categories);
+        dashboardDetails.put("budgets", budgets);
+        dashboardDetails.put("todayExpenditure", todayExpenditure);
+        return dashboardDetails;
+    }
 
 
 

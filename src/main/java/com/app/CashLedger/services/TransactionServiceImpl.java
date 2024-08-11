@@ -4,9 +4,7 @@ import com.app.CashLedger.dao.CategoryDao;
 import com.app.CashLedger.dao.MessageDao;
 import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
-import com.app.CashLedger.dto.MessageDto;
-import com.app.CashLedger.dto.TransactionDto;
-import com.app.CashLedger.dto.TransactionEditDto;
+import com.app.CashLedger.dto.*;
 import com.app.CashLedger.models.*;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.*;
@@ -1112,6 +1110,42 @@ public class TransactionServiceImpl implements TransactionService{
 
     }
 
+    @Override
+    public Map<String, Object> getDashboardDetails(Integer userId, String date) {
+        Map<String, Object> rawDashboardDetails = transactionDao.getDashboardDetails(userId, date);
+        Map<String, Object> dashboardDetails = new HashMap<>();
+        List<TransactionDto> transactionDtos = new ArrayList<>();
+        List<TransactionCategoryDto> transactionCategoryDtos = new ArrayList<>();
+        List<BudgetResponseDto> budgetResponseDtos = new ArrayList<>();
+        String firstTransactionDate = (String) rawDashboardDetails.get("firstTransactionDate");
+        Double accountBalance = (Double) rawDashboardDetails.get("accountBalance");
+        List<Transaction> rawTransactions = (List<Transaction>) rawDashboardDetails.get("latestTransactions");
+        List<TransactionCategory> rawCategories = (List<TransactionCategory>) rawDashboardDetails.get("categories");
+        List<Budget> rawBudgets = (List<Budget>) rawDashboardDetails.get("budgets");
+        Map<String, Object> todayExpenditure = (Map<String, Object>) rawDashboardDetails.get("todayExpenditure");
+
+        for(Transaction transaction : rawTransactions) {
+            transactionDtos.add(transactionToTransactionDto(transaction));
+        }
+
+        for(TransactionCategory transactionCategory : rawCategories) {
+            transactionCategoryDtos.add(transformTransactionCategory(transactionCategory));
+        }
+
+        for(Budget budget : rawBudgets) {
+            budgetResponseDtos.add(budgetToBudgetResponseDto(budget, 0.0));
+        }
+
+        dashboardDetails.put("firstTransactionDate", firstTransactionDate);
+        dashboardDetails.put("accountBalance", accountBalance);
+        dashboardDetails.put("latestTransactions", transactionDtos);
+        dashboardDetails.put("categories", transactionCategoryDtos);
+        dashboardDetails.put("budgets", budgetResponseDtos);
+        dashboardDetails.put("todayExpenditure", todayExpenditure);
+
+        return dashboardDetails;
+    }
+
 
     private TransactionDto transactionToTransactionDto(Transaction transaction) {
         List<TransactionDto.Category> categories = new ArrayList<>();
@@ -1139,6 +1173,86 @@ public class TransactionServiceImpl implements TransactionService{
                 .build();
         return transactionDto;
     }
+
+    private CategoryKeywordDto categoryToCategoryKeywordDto(CategoryKeyword categoryKeyword) {
+        CategoryKeywordDto categoryKeywordDto = CategoryKeywordDto.builder()
+                .id(categoryKeyword.getId())
+                .keyWord(categoryKeyword.getKeyword())
+                .nickName(categoryKeyword.getNickName())
+                .build();
+        return categoryKeywordDto;
+    }
+
+    private TransactionCategoryDto transformTransactionCategory(TransactionCategory transactionCategory) {
+        List<TransactionCategoryDto.BudgetDto> budgets = new ArrayList<>();
+        List<TransactionDto> transactions = new ArrayList<>();
+        List<CategoryKeywordDto> keywords = new ArrayList<>();
+        for(Transaction transaction : transactionCategory.getTransactions()) {
+            transactions.add(transactionToTransactionDto(transaction));
+        }
+
+        for(Budget budget : transactionCategory.getBudgets()) {
+            TransactionCategoryDto.BudgetDto budgetDto = TransactionCategoryDto.BudgetDto.builder()
+                    .id(budget.getId())
+                    .createdAt(budget.getCreatedAt().toString())
+                    .name(budget.getName())
+                    .budgetLimit(budget.getBudgetLimit())
+                    .createdAt(budget.getCreatedAt().toString())
+                    .limitDate(budget.getLimitDate().toString())
+                    .limitReached(budget.getLimitReached())
+                    .exceededBy(budget.getExceededBy())
+                    .build();
+            budgets.add(budgetDto);
+        }
+
+        for(CategoryKeyword categoryKeyword : transactionCategory.getKeywords()) {
+            keywords.add(categoryToCategoryKeywordDto(categoryKeyword));
+        }
+
+
+
+        TransactionCategoryDto transactionCategoryDto = TransactionCategoryDto.builder()
+                .id(transactionCategory.getId())
+                .name(transactionCategory.getName())
+                .createdAt(transactionCategory.getCreatedAt())
+                .transactions(transactions)
+                .keywords(keywords)
+                .budgets(budgets)
+                .build();
+        return transactionCategoryDto;
+    }
+
+
+
+    private BudgetResponseDto budgetToBudgetResponseDto(Budget budget, Double expenditure) {
+        BudgetResponseDto.Category category = BudgetResponseDto.Category.builder()
+                .id(budget.getCategory().getId())
+                .name(budget.getCategory().getName())
+                .build();
+
+        BudgetResponseDto.UserDetailsDto userDetailsDto = BudgetResponseDto.UserDetailsDto.builder()
+                .id(budget.getUserAccount().getId())
+                .name(budget.getUserAccount().getFname())
+                .build();
+
+        BudgetResponseDto budgetResponseDto = BudgetResponseDto.builder()
+                .id(budget.getId())
+                .name(budget.getName())
+                .active(budget.getActive())
+                .budgetLimit(budget.getBudgetLimit())
+                .expenditure(expenditure)
+                .createdAt(budget.getCreatedAt().toString())
+                .limitDate(budget.getLimitDate().toString())
+                .limitReached(budget.getLimitReached())
+                .limitReachedAt(budget.getLimitReachedAt())
+                .exceededBy(budget.getExceededBy())
+                .category(category)
+                .user(userDetailsDto)
+                .build();
+        return budgetResponseDto;
+    }
+
+
 
 
 }

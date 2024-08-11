@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class PaymentDao {
     public PaymentDao(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
-
+    @Transactional
     public Payment makePayment(Payment payment) {
         entityManager.persist(payment);
         return payment;

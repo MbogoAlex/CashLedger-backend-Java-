@@ -41,4 +41,6 @@ public interface TransactionService {
 
     byte[] generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException;
 
+    Map<String, Object> getDashboardDetails(Integer userId, String date);
+
 }

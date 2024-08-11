@@ -3,6 +3,7 @@ package com.app.CashLedger.services;
 import com.app.CashLedger.dao.PaymentDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.payment.PaymentPayload;
+import com.app.CashLedger.dto.payment.PaymentStatusPayload;
 import com.app.CashLedger.models.Payment;
 import com.app.CashLedger.models.UserAccount;
 import org.apache.coyote.BadRequestException;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +19,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -35,8 +38,8 @@ public class PaymentServiceImpl implements PaymentService{
     private final String CONSUMER_KEY = "lM4HxeXzFtAyXOA0ABhG/r5pM6sYUnA6";
     private final String CONSUMER_SECRET = "sO+0e+mvfzKhHy0jFmkMCwufxG0=";
 
-    private final String CALLBACK_URL = "https://dashboard.render.com/web/srv-ch5a73qk728glslftc9g";
-    private final String notificationId = "a2b2be55-0419-4316-8cab-dce5709ab509";
+    private final String CALLBACK_URL = "https://github.com/MbogoAlex";
+    private final String notificationId = "7faac0f8-7dfd-4bf4-84f3-dce4211c93ec";
     @Override
     public Boolean getSubscriptionStatus(Integer userId) {
         List<Payment> payments = paymentDao.getLatestPayment(userId);
@@ -106,6 +109,52 @@ public class PaymentServiceImpl implements PaymentService{
         return paymentResponse;
     }
 
+    @Override
+    public Boolean getSubscriptionFeePaymentStatus(PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException {
+        Gson gson = new Gson();
+        String orderId = paymentStatusPayload.getOrderId();
+        String token = paymentStatusPayload.getToken();
+        String url = "https://pay.pesapal.com/v3/api/Transactions/GetTransactionStatus?orderTrackingId="+orderId;
+
+        HttpRequest getRequest = HttpRequest.newBuilder()
+                .uri(new URI(url))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer "+token)
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpResponse<String> getResponse = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+
+        if(getResponse.statusCode() != HttpStatus.OK.value()) {
+            return false;
+        }
+
+        String jsonString = getResponse.body();
+
+        Map<String, Object> paymentResponse = gson.fromJson(jsonString, Map.class);
+        if(paymentResponse.get("status").equals("200")) {
+            return savePayment(paymentStatusPayload.getUserId());
+        } else {
+            return false;
+        }
+    }
+//    @Transactional
+    public Boolean savePayment(Integer userId) {
+        UserAccount userAccount = userAccountDao.getUser(userId);
+        Payment payment = Payment.builder()
+                .month(LocalDateTime.now().getMonth())
+                .paidAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMonths(1))
+                .amount(100.0)
+                .userAccount(userAccount)
+                .build();
+        System.out.println(payment);
+        paymentDao.makePayment(payment);
+        return true;
+    }
+
     String generateToken() throws URISyntaxException, IOException, InterruptedException {
         String url = "https://pay.pesapal.com/v3/api/Auth/RequestToken";
 
@@ -133,6 +182,8 @@ public class PaymentServiceImpl implements PaymentService{
 
         return (String) responseMap.get("token");
     }
+
+
 
 
 }

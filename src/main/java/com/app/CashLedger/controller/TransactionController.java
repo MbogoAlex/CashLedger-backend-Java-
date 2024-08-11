@@ -155,6 +155,14 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.getLatestTransactionCode(userId), "Transaction codes fetched", HttpStatus.OK);
     }
 
+    @GetMapping("transaction/dashboard/{userId}")
+    public ResponseEntity<Response> getDashboardDetails(
+            @PathVariable("userId") Integer userId,
+            @RequestParam("date") String date
+    ) {
+        return buildResponse("transaction", transactionService.getDashboardDetails(userId, date), "Dashboard details", HttpStatus.OK);
+    }
+
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(Response.builder()

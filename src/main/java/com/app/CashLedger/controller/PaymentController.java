@@ -1,6 +1,7 @@
 package com.app.CashLedger.controller;
 
 import com.app.CashLedger.dto.payment.PaymentPayload;
+import com.app.CashLedger.dto.payment.PaymentStatusPayload;
 import com.app.CashLedger.models.Response;
 import com.app.CashLedger.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,11 @@ public class PaymentController {
     @PostMapping("subscription/pay")
     public ResponseEntity<Response> paySubscriptionFee(@RequestBody PaymentPayload paymentPayload) throws URISyntaxException, IOException, InterruptedException {
         return buildResponse("payment", paymentService.paySubscriptionFee(paymentPayload), "Payment initiated", HttpStatus.OK);
+    }
+
+    @PostMapping("subpayment/status")
+    public ResponseEntity<Response> checkSubscriptionPaymentStatus(@RequestBody PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException {
+        return buildResponse("payment", paymentService.getSubscriptionFeePaymentStatus(paymentStatusPayload), "Payment status checked", HttpStatus.OK);
     }
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)

@@ -1,6 +1,7 @@
 package com.app.CashLedger.services;
 
 import com.app.CashLedger.dto.payment.PaymentPayload;
+import com.app.CashLedger.dto.payment.PaymentStatusPayload;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -10,4 +11,6 @@ public interface PaymentService {
     public Boolean getSubscriptionStatus(Integer userId);
 
     public Map<String, Object> paySubscriptionFee(PaymentPayload paymentPayload) throws URISyntaxException, IOException, InterruptedException;
+
+    public Boolean getSubscriptionFeePaymentStatus(PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException;
 }
