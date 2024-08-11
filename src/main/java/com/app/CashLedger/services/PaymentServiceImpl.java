@@ -67,7 +67,7 @@ public class PaymentServiceImpl implements PaymentService{
         billingAddress.put("country_code", "KE");
         billingAddress.put("first_name", Optional.ofNullable(userAccount.getFname()).orElse(""));
         billingAddress.put("middle_name", "");
-        billingAddress.put("last_name", Optional.of(userAccount.getLname()).orElse(""));
+        billingAddress.put("last_name", Optional.ofNullable(userAccount.getLname()).orElse(""));
         billingAddress.put("line_1", "");
         billingAddress.put("line_2", "");
         billingAddress.put("city", "");
@@ -85,6 +85,8 @@ public class PaymentServiceImpl implements PaymentService{
         payLoad.put("billing_address", billingAddress);
 
         Gson gson = new Gson();
+
+
 
         HttpRequest postRequest = HttpRequest.newBuilder()
                 .uri(new URI(url))
