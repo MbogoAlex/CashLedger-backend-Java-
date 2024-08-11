@@ -276,7 +276,8 @@ public class TransactionDao {
         query.setParameter("id", userId);
         Double balance = 0.0;
         try {
-            balance = query.getResultList().get(0).getBalance();
+            List<Transaction> transactions = query.getResultList();
+            balance = transactions.get(transactions.size() - 1).getBalance();
         } catch (Exception e) {
 
         }
