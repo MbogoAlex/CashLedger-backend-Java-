@@ -27,9 +27,29 @@ public class TransactionDao {
     }
 
     public Transaction addTransaction(Transaction transaction) {
-        entityManager.persist(transaction);
+        String sql = "INSERT INTO transaction (transaction_code, transaction_type, transaction_amount, transaction_cost, date, time, sender, recipient, nick_name, entity, balance, user_id) " +
+                "VALUES (:transactionCode, :transactionType, :transactionAmount, :transactionCost, :date, :time, :sender, :recipient, :nickName, :entity, :balance, :userAccount) " +
+                "ON CONFLICT (transaction_code) DO NOTHING";
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("transactionCode", transaction.getTransactionCode() != null ? transaction.getTransactionCode() : null);
+        query.setParameter("transactionType", transaction.getTransactionType() != null ? transaction.getTransactionType() : null);
+        query.setParameter("transactionAmount", transaction.getTransactionAmount() != null ? transaction.getTransactionAmount() : null);
+        query.setParameter("transactionCost", transaction.getTransactionCost() != null ? transaction.getTransactionCost() : null);
+        query.setParameter("date", transaction.getDate() != null ? transaction.getDate() : null);
+        query.setParameter("time", transaction.getTime() != null ? transaction.getTime() : null);
+        query.setParameter("sender", transaction.getSender() != null ? transaction.getSender() : null);
+        query.setParameter("recipient", transaction.getRecipient() != null ? transaction.getRecipient() : null);
+        query.setParameter("nickName", transaction.getNickName() != null ? transaction.getNickName() : null);
+        query.setParameter("entity", transaction.getEntity() != null ? transaction.getEntity() : null);
+        query.setParameter("balance", transaction.getBalance() != null ? transaction.getBalance() : null);
+        query.setParameter("userAccount", transaction.getUserAccount() != null ? transaction.getUserAccount().getId() : null);
+
+        query.executeUpdate();
+
         return transaction;
     }
+
 
     public Transaction updateTransaction(Transaction transaction) {
         entityManager.merge(transaction);
@@ -60,6 +80,21 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("you", "You");
+        return query.getResultList();
+    }
+
+    public List<Transaction> getTransactions2(Integer userId, String entity) {
+        TypedQuery<Transaction> query = entityManager.createQuery(
+                "from Transaction where userAccount.id = :id and " +
+                        "(:entity is null or " +
+                        "((sender != :you and LOWER(sender) like concat('%', :entity, '%')) or " +
+                        "(recipient != :you and LOWER(recipient) like concat('%', :entity, '%'))))",
+                Transaction.class
+        );
+        query.setParameter("id", userId);
+        query.setParameter("entity", entity.toLowerCase());
+        query.setParameter("you", "You");
+        query.setMaxResults(1);
         return query.getResultList();
     }
 

@@ -43,7 +43,7 @@ public class MessageServiceImpl implements MessageService{
     public List<MessageDto> addMessages(List<MessageDto> messages, Integer userId) {
         System.out.println("RECEIVED " + messages.size() + " messages");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        UserAccount user = userAccountDao.getUser(userId);
+
         return processMessages(messages, userId);
     }
 
@@ -60,7 +60,8 @@ public class MessageServiceImpl implements MessageService{
 
     @Override
     public List<MessageDto> processMessages(List<MessageDto> messages, Integer userId) {
-
+        List<Transaction> newTransactions = new ArrayList<>();
+        UserAccount user = userAccountDao.getUser(userId);
         List<String> errMsg = new ArrayList<>();
         Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
                 "sent to",
@@ -104,16 +105,17 @@ public class MessageServiceImpl implements MessageService{
 
             try {
                 MessageDto messageDto = new MessageDto(message, date, time);
-                transactionService.extractTransactionDetails(messageDto, userId);
+                newTransactions.add(transactionService.extractTransactionDetails(messageDto, userId));
                 processedMessages.add(messageDto);
             } catch (Exception e) {
                 errMsg.add(message);
             }
         }
-
+        transactionService.addTransactions(newTransactions, user);
         return processedMessages;
 
     }
+
 
    private MessageDto messageToMessageDto(Message message) {
         MessageDto messageDto = MessageDto.builder()

@@ -20,11 +20,13 @@ import java.util.List;
         @Index(name = "idx_recipient", columnList = "recipient"),
         @Index(name = "idx_entity", columnList = "entity"),
         @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_transaction_code", columnList = "transaction_code")
 })
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(unique = true)
     private String transactionCode;
     private String transactionType;
     private Double transactionAmount;

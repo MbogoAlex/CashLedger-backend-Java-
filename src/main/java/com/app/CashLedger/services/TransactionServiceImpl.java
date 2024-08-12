@@ -95,10 +95,12 @@ public class TransactionServiceImpl implements TransactionService{
     }
 //    @Transactional
     @Override
-    public TransactionDto extractTransactionDetails(MessageDto messageDto, Integer userId) {
+    public Transaction extractTransactionDetails(MessageDto messageDto, Integer userId) {
+        Transaction transaction = new Transaction();
 //        System.out.println("PROCESSING");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         UserAccount userAccount = userAccountDao.getUser(userId);
+        List<Transaction> newTransactions = new ArrayList<>();
         TransactionDto transactionDto = new TransactionDto();
         String message = messageDto.getBody();
         String realDate = String.valueOf(messageDto.getDate());
@@ -677,7 +679,7 @@ public class TransactionServiceImpl implements TransactionService{
                 transactionDto.setRecipient(recipient);
                 transactionDto.setBalance(balance);
 
-                Transaction transaction = new Transaction();
+
                 transaction.setTransactionCode(transactionCode);
                 transaction.setTransactionType(transactionType);
                 transaction.setTransactionAmount(transactionAmount);
@@ -701,59 +703,30 @@ public class TransactionServiceImpl implements TransactionService{
                     entity = recipient;
                 }
 
-                List<String> existingTransactionCodes = transactionDao.getExistingTransactionCodes(userId);
                 assert entity != null;
-                List<Transaction> transactions = transactionDao.getTransactions(userId, entity);
+                List<Transaction> transactions = transactionDao.getTransactions2(userId, entity);
 
-                if(!existingTransactionCodes.isEmpty()) {
-                    if(existingTransactionCodes.stream().noneMatch(code -> code.trim().equalsIgnoreCase(transaction.getTransactionCode()))) {
-                        var nickname = "";
-                        if(!transactions.isEmpty()) {
-                            if(transactions.get(0).getNickName() != null) {
-                                nickname = transactions.get(0).getNickName();
-                            }
-                        }
-                        System.out.println("Existing: "+existingTransactionCodes.get(0));
-                        System.out.println("New: "+transaction.getTransactionCode());
-                        System.out.println("ADDING");
-                        Message message2 = new Message();
-                        message2.setMessage(messageDto.getBody());
-                        message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
-                        message2.setTime(LocalTime.parse(messageDto.getTime()));
-                        message2.setUserAccount(userAccount);
-                        messagesToAdd.add(message2);
-                        if(!nickname.isEmpty() && !nickname.isBlank()) {
-                            transaction.setNickName(nickname);
-                        }
-                        transactionsToAdd.add(transaction);
-
+                var nickname = "";
+                if(!transactions.isEmpty()) {
+                    if(transactions.get(0).getNickName() != null) {
+                        nickname = transactions.get(0).getNickName();
                     }
-                } else {
-                    var nickname = "";
-                    if(!transactions.isEmpty()) {
-                        if(transactions.get(0).getNickName() != null) {
-                            nickname = transactions.get(0).getNickName();
-                        }
-                    }
-                    Message message2 = new Message();
-                    message2.setMessage(messageDto.getBody());
-                    message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
-                    message2.setTime(LocalTime.parse(messageDto.getTime()));
-                    message2.setUserAccount(userAccount);
-                    messagesToAdd.add(message2);
-                    if(!nickname.isEmpty() && !nickname.isBlank()) {
-                        transaction.setNickName(nickname);
-                    }
-                    transactionsToAdd.add(transaction);
-
                 }
+
+                if(!nickname.isEmpty() && !nickname.isBlank()) {
+                    transaction.setNickName(nickname);
+                }
+
             }
 //            addMessages(messagesToAdd);
-            addTransactions(transactionsToAdd, userAccount);
+
         }
 
+        addTransactions(newTransactions, userAccount);
 
-        return transactionDto;
+
+
+        return transaction;
     }
     @Transactional
     public void addMessages(List<Message> messages) {
@@ -770,10 +743,9 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Transactional
+    @Override
     public void addTransactions(List<Transaction> transactions, UserAccount userAccount) {
         List<TransactionCategory> categories = userAccount.getTransactionCategories();
-
-
         final int batchSize = 50;
         for(int i = 0; i < transactions.size(); i++) {
             Transaction transaction = transactionDao.addTransaction(transactions.get(i));

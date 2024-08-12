@@ -87,12 +87,10 @@ public class CategoryServiceImpl implements CategoryService{
         category.setUpdatedAt(LocalDateTime.now());
 
         for(Transaction transaction1 : existingTransactions) {
-            if(transaction.getRecipient().equals(transaction1.getRecipient()) || transaction.getSender().equals(transaction1.getSender())) {
-                if(!transaction1.getCategories().contains(category)) {
-                    transaction.getCategories().add(category);
-                    category.getTransactions().add(transaction);
-                    break;
-                }
+            if(transaction.getEntity().equalsIgnoreCase(transaction1.getEntity())) {
+                transaction.getCategories().add(category);
+                category.getTransactions().add(transaction);
+                break;
             }
         }
 
