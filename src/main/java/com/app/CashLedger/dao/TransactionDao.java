@@ -34,7 +34,6 @@ public class TransactionDao {
     }
     @Transactional
     public Transaction addTransaction(Transaction transaction) {
-        System.out.println("TRYING TO ADD: " + transaction);
         try {
             entityManager.persist(transaction);
         } catch (PersistenceException ignored) {
