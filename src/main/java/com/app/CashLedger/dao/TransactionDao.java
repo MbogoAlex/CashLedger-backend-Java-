@@ -27,29 +27,9 @@ public class TransactionDao {
     }
 
     public Transaction addTransaction(Transaction transaction) {
-        String sql = "INSERT INTO transaction (transaction_code, transaction_type, transaction_amount, transaction_cost, date, time, sender, recipient, nick_name, entity, balance, user_id) " +
-                "VALUES (:transactionCode, :transactionType, :transactionAmount, :transactionCost, :date, :time, :sender, :recipient, :nickName, :entity, :balance, :userAccount) " +
-                "ON CONFLICT (transaction_code) DO NOTHING";
-
-        Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("transactionCode", transaction.getTransactionCode() != null ? transaction.getTransactionCode() : null);
-        query.setParameter("transactionType", transaction.getTransactionType() != null ? transaction.getTransactionType() : null);
-        query.setParameter("transactionAmount", transaction.getTransactionAmount() != null ? transaction.getTransactionAmount() : null);
-        query.setParameter("transactionCost", transaction.getTransactionCost() != null ? transaction.getTransactionCost() : null);
-        query.setParameter("date", transaction.getDate() != null ? transaction.getDate() : null);
-        query.setParameter("time", transaction.getTime() != null ? transaction.getTime() : null);
-        query.setParameter("sender", transaction.getSender() != null ? transaction.getSender() : null);
-        query.setParameter("recipient", transaction.getRecipient() != null ? transaction.getRecipient() : null);
-        query.setParameter("nickName", transaction.getNickName() != null ? transaction.getNickName() : null);
-        query.setParameter("entity", transaction.getEntity() != null ? transaction.getEntity() : null);
-        query.setParameter("balance", transaction.getBalance() != null ? transaction.getBalance() : null);
-        query.setParameter("userAccount", transaction.getUserAccount() != null ? transaction.getUserAccount().getId() : null);
-
-        query.executeUpdate();
-
+        entityManager.persist(transaction);
         return transaction;
     }
-
 
     public Transaction updateTransaction(Transaction transaction) {
         entityManager.merge(transaction);
@@ -83,7 +63,7 @@ public class TransactionDao {
         return query.getResultList();
     }
 
-    public List<Transaction> getTransactions2(Integer userId, String entity) {
+    public Transaction getTransactionWithIdAndEntity(Integer userId, String entity) {
         TypedQuery<Transaction> query = entityManager.createQuery(
                 "from Transaction where userAccount.id = :id and " +
                         "(:entity is null or " +
@@ -94,9 +74,10 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("you", "You");
-        query.setMaxResults(1);
-        return query.getResultList();
+        query.setMaxResults(1);  // Ensures only one result is returned
+        return query.getSingleResult();
     }
+
 
     public List<Transaction> getAllTransactions(Integer userId){
         TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
@@ -307,12 +288,11 @@ public class TransactionDao {
     }
 
     public Double getCurrentBalance(Integer userId) {
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date, time asc", Transaction.class);
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
         query.setParameter("id", userId);
         Double balance = 0.0;
         try {
-            List<Transaction> transactions = query.getResultList();
-            balance = transactions.get(transactions.size() - 1).getBalance();
+            balance = query.getResultList().get(0).getBalance();
         } catch (Exception e) {
 
         }
@@ -583,8 +563,5 @@ public class TransactionDao {
     }
 
 
-    public void flushAndClear() {
-        entityManager.flush();
-        entityManager.clear();
-    }
+
 }

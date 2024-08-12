@@ -20,7 +20,8 @@ import java.util.List;
         @Index(name = "idx_recipient", columnList = "recipient"),
         @Index(name = "idx_entity", columnList = "entity"),
         @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_transaction_code", columnList = "transaction_code")
+        @Index(name = "idx_transaction_code", columnList = "transaction_code"),
+        @Index(name = "idx_userId_entity", columnList = "user_id, entity")
 })
 public class Transaction {
     @Id

@@ -5,20 +5,13 @@ import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.models.Message;
-import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.UserAccount;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImpl implements MessageService{
@@ -43,7 +36,7 @@ public class MessageServiceImpl implements MessageService{
     public List<MessageDto> addMessages(List<MessageDto> messages, Integer userId) {
         System.out.println("RECEIVED " + messages.size() + " messages");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
+        UserAccount user = userAccountDao.getUser(userId);
         return processMessages(messages, userId);
     }
 
@@ -60,8 +53,7 @@ public class MessageServiceImpl implements MessageService{
 
     @Override
     public List<MessageDto> processMessages(List<MessageDto> messages, Integer userId) {
-        List<Transaction> newTransactions = new ArrayList<>();
-        UserAccount user = userAccountDao.getUser(userId);
+
         List<String> errMsg = new ArrayList<>();
         Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
                 "sent to",
@@ -105,24 +97,23 @@ public class MessageServiceImpl implements MessageService{
 
             try {
                 MessageDto messageDto = new MessageDto(message, date, time);
-                newTransactions.add(transactionService.extractTransactionDetails(messageDto, userId));
+                transactionService.extractTransactionDetails(messageDto, userId);
                 processedMessages.add(messageDto);
             } catch (Exception e) {
                 errMsg.add(message);
             }
         }
-        transactionService.addTransactions(newTransactions, user.getTransactionCategories());
+
         return processedMessages;
 
     }
 
-
-   private MessageDto messageToMessageDto(Message message) {
+    private MessageDto messageToMessageDto(Message message) {
         MessageDto messageDto = MessageDto.builder()
                 .body(message.getMessage())
                 .date(String.valueOf(message.getDate()))
                 .time(String.valueOf(message.getTime()))
                 .build();
         return messageDto;
-   }
+    }
 }

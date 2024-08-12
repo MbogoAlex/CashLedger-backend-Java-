@@ -4,8 +4,6 @@ import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Transaction;
-import com.app.CashLedger.models.TransactionCategory;
-import com.app.CashLedger.models.UserAccount;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.JRException;
 
@@ -19,7 +17,7 @@ public interface TransactionService {
 
     List<TransactionDto> addTransactions(List<TransactionDto> transactions, Integer userId);
 
-    Transaction extractTransactionDetails(MessageDto message, Integer userId);
+    TransactionDto extractTransactionDetails(MessageDto message, Integer userId);
 
     String getMessageTransactionCode(MessageDto message);
 
@@ -45,7 +43,5 @@ public interface TransactionService {
     ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException;
 
     Map<String, Object> getDashboardDetails(Integer userId, String date);
-
-    void addTransactions(List<Transaction> transactions, List<TransactionCategory> categories);
 
 }
