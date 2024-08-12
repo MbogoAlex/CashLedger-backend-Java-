@@ -4,6 +4,7 @@ import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Transaction;
+import com.app.CashLedger.models.UserAccount;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.JRException;
 
@@ -17,7 +18,7 @@ public interface TransactionService {
 
     List<TransactionDto> addTransactions(List<TransactionDto> transactions, Integer userId);
 
-    TransactionDto extractTransactionDetails(MessageDto message, Integer userId);
+    TransactionDto extractTransactionDetails(MessageDto message, UserAccount userAccount);
 
     String getMessageTransactionCode(MessageDto message);
 

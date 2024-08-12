@@ -78,7 +78,7 @@ public class CategoryServiceImpl implements CategoryService{
 
         return transformTransactionCategory(categoryDao.updateCategory(category1));
     }
-//    @Transactional
+    @Transactional
     @Override
     public TransactionCategoryDto addTransactionToCategory(Transaction transaction, Integer categoryId) {
         TransactionCategory category = categoryDao.getCategory(categoryId);

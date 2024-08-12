@@ -31,13 +31,13 @@ public class MessageServiceImpl implements MessageService{
         this.transactionDao = transactionDao;
         this.transactionService = transactionService;
     }
-    @Transactional
+
     @Override
     public List<MessageDto> addMessages(List<MessageDto> messages, Integer userId) {
         System.out.println("RECEIVED " + messages.size() + " messages");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         UserAccount user = userAccountDao.getUser(userId);
-        return processMessages(messages, userId);
+        return processMessages(messages, user);
     }
 
 
@@ -52,7 +52,7 @@ public class MessageServiceImpl implements MessageService{
     }
 
     @Override
-    public List<MessageDto> processMessages(List<MessageDto> messages, Integer userId) {
+    public List<MessageDto> processMessages(List<MessageDto> messages, UserAccount userAccount) {
 
         List<String> errMsg = new ArrayList<>();
         Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
@@ -97,7 +97,7 @@ public class MessageServiceImpl implements MessageService{
 
             try {
                 MessageDto messageDto = new MessageDto(message, date, time);
-                transactionService.extractTransactionDetails(messageDto, userId);
+                transactionService.extractTransactionDetails(messageDto, userAccount);
                 processedMessages.add(messageDto);
             } catch (Exception e) {
                 errMsg.add(message);

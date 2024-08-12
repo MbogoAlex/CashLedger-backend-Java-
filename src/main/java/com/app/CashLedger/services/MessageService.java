@@ -2,6 +2,8 @@ package com.app.CashLedger.services;
 
 import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.models.Message;
+import com.app.CashLedger.models.UserAccount;
+
 import java.util.List;
 
 public interface MessageService {
@@ -9,5 +11,5 @@ public interface MessageService {
     List<MessageDto> getMessages();
 
 
-    List<MessageDto> processMessages(List<MessageDto> messages, Integer userId);
+    List<MessageDto> processMessages(List<MessageDto> messages, UserAccount userAccount);
 }

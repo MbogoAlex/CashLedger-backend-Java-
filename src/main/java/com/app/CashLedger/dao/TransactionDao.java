@@ -5,10 +5,12 @@ import com.app.CashLedger.models.Budget;
 import com.app.CashLedger.models.Transaction;
 import com.app.CashLedger.models.TransactionCategory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Type;
 import java.sql.Date;
@@ -25,11 +27,17 @@ public class TransactionDao {
     public TransactionDao(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
-
+    @Transactional
     public Transaction addTransaction(Transaction transaction) {
-        entityManager.persist(transaction);
+        System.out.println("TRYING TO ADD: " + transaction);
+        try {
+            entityManager.persist(transaction);
+        } catch (PersistenceException ignored) {
+
+        }
         return transaction;
     }
+
 
     public Transaction updateTransaction(Transaction transaction) {
         entityManager.merge(transaction);
@@ -63,6 +71,21 @@ public class TransactionDao {
         return query.getResultList();
     }
 
+    public List<Transaction> getTransactions2(Integer userId, String entity) {
+        TypedQuery<Transaction> query = entityManager.createQuery(
+                "from Transaction where userAccount.id = :id and " +
+                        "(:entity is null or " +
+                        "((sender != :you and LOWER(sender) like concat('%', :entity, '%')) or " +
+                        "(recipient != :you and LOWER(recipient) like concat('%', :entity, '%'))))",
+                Transaction.class
+        );
+        query.setParameter("id", userId);
+        query.setParameter("entity", entity.toLowerCase());
+        query.setParameter("you", "You");
+        query.setMaxResults(1);
+        return query.getResultList();
+    }
+
     public List<Transaction> getAllTransactions(Integer userId){
         TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
         query.setParameter("id", userId);
@@ -80,9 +103,12 @@ public class TransactionDao {
         query.setParameter("id", userId);
         query.setParameter("entity", entity.toLowerCase());
         query.setParameter("you", "You");
-        query.setMaxResults(1);  // Ensures only one result is returned
-        return query.getSingleResult();
+        query.setMaxResults(1);
+
+        List<Transaction> results = query.getResultList();
+        return results.isEmpty() ? null : results.get(0);
     }
+
 
     public List<String> getExistingTransactionCodes(Integer userId) {
         TypedQuery<String> query = entityManager.createQuery("select t.transactionCode from Transaction t where t.userAccount.id = :userId order by t.date desc", String.class);
@@ -287,11 +313,12 @@ public class TransactionDao {
     }
 
     public Double getCurrentBalance(Integer userId) {
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date, time asc", Transaction.class);
         query.setParameter("id", userId);
         Double balance = 0.0;
         try {
-            balance = query.getResultList().get(0).getBalance();
+            List<Transaction> transactions = query.getResultList();
+            balance = transactions.get(transactions.size() - 1).getBalance();
         } catch (Exception e) {
 
         }
@@ -561,7 +588,7 @@ public class TransactionDao {
         return dashboardDetails;
     }
 
-
+    @Transactional
     public void flushAndClear() {
         entityManager.flush();
         entityManager.clear();

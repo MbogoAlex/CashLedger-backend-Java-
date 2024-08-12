@@ -95,10 +95,9 @@ public class TransactionServiceImpl implements TransactionService{
     }
     //    @Transactional
     @Override
-    public TransactionDto extractTransactionDetails(MessageDto messageDto, Integer userId) {
-//        System.out.println("PROCESSING");
+    public TransactionDto extractTransactionDetails(MessageDto messageDto, UserAccount userAccount) {
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        UserAccount userAccount = userAccountDao.getUser(userId);
         TransactionDto transactionDto = new TransactionDto();
         String message = messageDto.getBody();
         String realDate = String.valueOf(messageDto.getDate());
@@ -702,12 +701,13 @@ public class TransactionServiceImpl implements TransactionService{
                 }
 
                 assert entity != null;
-                Transaction transaction2 = transactionDao.getTransactionWithIdAndEntity(userId, entity);
+
+                List<Transaction> transactions = transactionDao.getTransactions(userAccount.getId(), entity);
 
                 var nickname = "";
-                if(transaction2 != null) {
-                    if(transaction2.getNickName() != null) {
-                        nickname = transaction2.getNickName();
+                if(!transactions.isEmpty()) {
+                    if(transactions.get(0).getNickName() != null) {
+                        nickname = transactions.get(0).getNickName();
                     }
                 }
                 Message message2 = new Message();
@@ -716,12 +716,15 @@ public class TransactionServiceImpl implements TransactionService{
                 message2.setTime(LocalTime.parse(messageDto.getTime()));
                 message2.setUserAccount(userAccount);
                 messagesToAdd.add(message2);
+
                 if(!nickname.isEmpty() && !nickname.isBlank()) {
                     transaction.setNickName(nickname);
                 }
+
                 transactionsToAdd.add(transaction);
 
             }
+
 //            addMessages(messagesToAdd);
             addTransactions(transactionsToAdd, userAccount);
         }
@@ -743,25 +746,34 @@ public class TransactionServiceImpl implements TransactionService{
         messageDao.flushAndClear();
     }
 
-    @Transactional
+
     public void addTransactions(List<Transaction> transactions, UserAccount userAccount) {
         List<TransactionCategory> categories = userAccount.getTransactionCategories();
 
-
         final int batchSize = 50;
-        for(int i = 0; i < transactions.size(); i++) {
-            Transaction transaction = transactionDao.addTransaction(transactions.get(i));
-            if(!categories.isEmpty()) {
-                for(TransactionCategory transactionCategory : categories) {
-                    categoryService.addTransactionToCategory(transaction, transactionCategory.getId());
+        for (int i = 0; i < transactions.size(); i++) {
+            try {
+
+                Transaction transaction = transactionDao.addTransaction(transactions.get(i));
+
+                if (!categories.isEmpty()) {
+                    for (TransactionCategory transactionCategory : categories) {
+                        categoryService.addTransactionToCategory(transaction, transactionCategory.getId());
+                    }
                 }
-            }
-            if(i > 0 && i % batchSize == 0) {
-                transactionDao.flushAndClear();
+
+                if (i > 0 && i % batchSize == 0) {
+
+                    transactionDao.flushAndClear();
+                }
+            } catch (Exception ignored) {
+
             }
         }
+
         transactionDao.flushAndClear();
     }
+
 
 
     @Override
