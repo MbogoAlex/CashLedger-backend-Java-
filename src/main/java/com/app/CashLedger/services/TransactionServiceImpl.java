@@ -663,6 +663,8 @@ public class TransactionServiceImpl implements TransactionService{
                     balance = Double.parseDouble(balanceMatcher.group(1).replace(",", "").replace(" ", ""));
                 }
             }
+            List<Message> messagesToAdd = new ArrayList<>();
+            List<Transaction> transactionsToAdd = new ArrayList<>();
 
             if (transactionAmount != null) {
                 transactionDto.setTransactionCode(transactionCode);
@@ -708,21 +710,59 @@ public class TransactionServiceImpl implements TransactionService{
                         nickname = transaction2.getNickName();
                     }
                 }
-//                Message message2 = new Message();
-//                message2.setMessage(messageDto.getBody());
-//                message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
-//                message2.setTime(LocalTime.parse(messageDto.getTime()));
-//                message2.setUserAccount(userAccount);
-//                messageDao.addMessage(message2);
+                Message message2 = new Message();
+                message2.setMessage(messageDto.getBody());
+                message2.setDate(LocalDate.parse(messageDto.getDate(), formatter));
+                message2.setTime(LocalTime.parse(messageDto.getTime()));
+                message2.setUserAccount(userAccount);
+                messagesToAdd.add(message2);
                 if(!nickname.isEmpty() && !nickname.isBlank()) {
                     transaction.setNickName(nickname);
                 }
-                transactionDao.addTransaction(transaction);
+                transactionsToAdd.add(transaction);
+
             }
+//            addMessages(messagesToAdd);
+            addTransactions(transactionsToAdd, userAccount);
         }
+
 
         return transactionDto;
     }
+    @Transactional
+    public void addMessages(List<Message> messages) {
+        final int batchSize = 50; // Adjust batch size as needed
+        for (int i = 0; i < messages.size(); i++) {
+            messageDao.addMessage(messages.get(i));
+            if (i > 0 && i % batchSize == 0) {
+                // Flush a batch of inserts and release memory
+                messageDao.flushAndClear();
+            }
+        }
+        // Ensure to flush and clear the remaining entities
+        messageDao.flushAndClear();
+    }
+
+    @Transactional
+    public void addTransactions(List<Transaction> transactions, UserAccount userAccount) {
+        List<TransactionCategory> categories = userAccount.getTransactionCategories();
+
+
+        final int batchSize = 50;
+        for(int i = 0; i < transactions.size(); i++) {
+            Transaction transaction = transactionDao.addTransaction(transactions.get(i));
+            if(!categories.isEmpty()) {
+                for(TransactionCategory transactionCategory : categories) {
+                    categoryService.addTransactionToCategory(transaction, transactionCategory.getId());
+                }
+            }
+            if(i > 0 && i % batchSize == 0) {
+                transactionDao.flushAndClear();
+            }
+        }
+        transactionDao.flushAndClear();
+    }
+
 
     @Override
     public String getMessageTransactionCode(MessageDto message) {

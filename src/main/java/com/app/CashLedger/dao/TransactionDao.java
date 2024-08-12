@@ -63,6 +63,12 @@ public class TransactionDao {
         return query.getResultList();
     }
 
+    public List<Transaction> getAllTransactions(Integer userId){
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
+        query.setParameter("id", userId);
+        return query.getResultList();
+    }
+
     public Transaction getTransactionWithIdAndEntity(Integer userId, String entity) {
         TypedQuery<Transaction> query = entityManager.createQuery(
                 "from Transaction where userAccount.id = :id and " +
@@ -76,13 +82,6 @@ public class TransactionDao {
         query.setParameter("you", "You");
         query.setMaxResults(1);  // Ensures only one result is returned
         return query.getSingleResult();
-    }
-
-
-    public List<Transaction> getAllTransactions(Integer userId){
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
-        query.setParameter("id", userId);
-        return query.getResultList();
     }
 
     public List<String> getExistingTransactionCodes(Integer userId) {
@@ -563,5 +562,8 @@ public class TransactionDao {
     }
 
 
-
+    public void flushAndClear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
 }
