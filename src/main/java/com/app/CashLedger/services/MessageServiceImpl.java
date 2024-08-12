@@ -111,7 +111,7 @@ public class MessageServiceImpl implements MessageService{
                 errMsg.add(message);
             }
         }
-        transactionService.addTransactions(newTransactions, user);
+        transactionService.addTransactions(newTransactions, user.getTransactionCategories());
         return processedMessages;
 
     }

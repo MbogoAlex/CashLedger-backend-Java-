@@ -722,8 +722,6 @@ public class TransactionServiceImpl implements TransactionService{
 
         }
 
-        addTransactions(newTransactions, userAccount);
-
 
 
         return transaction;
@@ -742,10 +740,9 @@ public class TransactionServiceImpl implements TransactionService{
         messageDao.flushAndClear();
     }
 
-    @Transactional
+    @Transactional()
     @Override
-    public void addTransactions(List<Transaction> transactions, UserAccount userAccount) {
-        List<TransactionCategory> categories = userAccount.getTransactionCategories();
+    public void addTransactions(List<Transaction> transactions, List<TransactionCategory> categories) {
         final int batchSize = 50;
         for(int i = 0; i < transactions.size(); i++) {
             Transaction transaction = transactionDao.addTransaction(transactions.get(i));

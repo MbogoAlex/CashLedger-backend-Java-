@@ -4,6 +4,7 @@ import com.app.CashLedger.dto.MessageDto;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Transaction;
+import com.app.CashLedger.models.TransactionCategory;
 import com.app.CashLedger.models.UserAccount;
 import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import net.sf.jasperreports.engine.JRException;
@@ -45,6 +46,6 @@ public interface TransactionService {
 
     Map<String, Object> getDashboardDetails(Integer userId, String date);
 
-    void addTransactions(List<Transaction> transactions, UserAccount userAccount);
+    void addTransactions(List<Transaction> transactions, List<TransactionCategory> categories);
 
 }
