@@ -162,6 +162,11 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.getDashboardDetails(userId, date), "Dashboard details", HttpStatus.OK);
     }
 
+    @DeleteMapping("transaction/deleteall")
+    public ResponseEntity<Response> deleteAllTransactions() {
+        return buildResponse("transaction", transactionService.deleteAllTransactions(), "Deleted all transactions", HttpStatus.OK);
+    }
+
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(Response.builder()

@@ -1182,6 +1182,11 @@ public class TransactionServiceImpl implements TransactionService{
 
         return dashboardDetails;
     }
+    @Transactional
+    @Override
+    public String deleteAllTransactions() {
+        return transactionDao.deleteAllTransactions();
+    }
 
 
     private TransactionDto transactionToTransactionDto(Transaction transaction) {

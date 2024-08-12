@@ -45,4 +45,6 @@ public interface TransactionService {
 
     Map<String, Object> getDashboardDetails(Integer userId, String date);
 
+    String deleteAllTransactions();
+
 }

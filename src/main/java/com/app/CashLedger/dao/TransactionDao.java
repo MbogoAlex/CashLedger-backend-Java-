@@ -27,6 +27,11 @@ public class TransactionDao {
     public TransactionDao(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
+
+    public String deleteAllTransactions() {
+        Query query = entityManager.createQuery("delete from Transaction");
+        return "Deleted "+query.executeUpdate()+" rows";
+    }
     @Transactional
     public Transaction addTransaction(Transaction transaction) {
         System.out.println("TRYING TO ADD: " + transaction);
