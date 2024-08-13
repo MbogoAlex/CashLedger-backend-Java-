@@ -4,22 +4,21 @@ import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 
 public class JasperReportCompiler {
+
     public static void main(String[] args) {
         try {
-            if (args.length != 2) {
-                throw new IllegalArgumentException("Two arguments are required: <input .jrxml file> <output .jasper file>");
-            }
+            // Path to your .jrxml file
+            String sourceFile = "src/main/resources/templates/AllTransactionsReport.jrxml";
 
-            String jrxmlFile = args[0];
-            String jasperFile = args[1];
+            // Path to output the .jasper file
+            String outputFile = "src/main/resources/templates/AllTransactionsReport.jasper";
 
-            JasperReport jasperReport = JasperCompileManager.compileReport(jrxmlFile);
-            JasperCompileManager.writeReportToXmlFile(jasperReport, jasperFile);
+            // Compile the .jrxml file
+            JasperCompileManager.compileReportToFile(sourceFile, outputFile);
 
-            System.out.println("Compiled Jasper report to: " + jasperFile);
+            System.out.println("Report compiled successfully.");
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
         }
     }
 }

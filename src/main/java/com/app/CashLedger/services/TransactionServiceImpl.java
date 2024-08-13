@@ -1078,54 +1078,61 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionsMap;
     }
 
-    public ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException {
+    public ByteArrayOutputStream generateAllTransactionsReport(
+            Integer userId, String entity, Integer categoryId, Integer budgetId,
+            String transactionType, String startDate, String endDate) throws JRException, ParseException {
 
+        // Fetch user and transactions
         UserAccount userAccount = userAccountDao.getUser(userId);
-        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
+        List<Transaction> transactions = transactionDao.getUserTransactions(
+                userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
         List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
 
+        // Date formatting
         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM dd, yyyy");
 
-        // Parse the input dates
         Date start = inputFormat.parse(startDate);
         Date end = inputFormat.parse(endDate);
 
-        // Format the dates to the desired output format
         String formattedStartDate = outputFormat.format(start);
         String formattedEndDate = outputFormat.format(end);
 
+        // Initialize totals
         Double totalIn = 0.0;
         Double totalOut = 0.0;
         Double totalTransactionCost = 0.0;
 
-        String owner = "";
-        if(userAccount.getFname() == null && userAccount.getLname() == null) {
+        // Determine report owner
+        String owner;
+        if (userAccount.getFname() == null && userAccount.getLname() == null) {
             owner = userAccount.getPhoneNumber();
-        } else if(userAccount.getFname() == null && userAccount.getLname() != null) {
+        } else if (userAccount.getFname() == null) {
             owner = userAccount.getLname();
-        } else if(userAccount.getFname() != null && userAccount.getLname() == null) {
+        } else if (userAccount.getLname() == null) {
             owner = userAccount.getFname();
-        } else if(userAccount.getFname() != null && userAccount.getLname() != null) {
-            owner = userAccount.getFname()+" "+userAccount.getLname();
+        } else {
+            owner = userAccount.getFname() + " " + userAccount.getLname();
         }
 
-        // Process each transaction
+        // Process transactions and build report models
         for (Transaction transaction : transactions) {
             List<String> categoryNames = new ArrayList<>();
             String moneyIn = "-";
             String moneyOut = "-";
             String transactionCost = "-";
+
             if (transaction.getTransactionAmount() > 0) {
-                totalIn = totalIn + transaction.getTransactionAmount();
+                totalIn += transaction.getTransactionAmount();
                 moneyIn = "Ksh" + transaction.getTransactionAmount();
             } else if (transaction.getTransactionAmount() < 0) {
-                totalOut = totalOut + Math.abs(transaction.getTransactionAmount());
-                totalTransactionCost = totalTransactionCost + Math.abs(transaction.getTransactionCost());
+                totalOut += Math.abs(transaction.getTransactionAmount());
+                totalTransactionCost += Math.abs(transaction.getTransactionCost());
                 moneyOut = "Ksh" + Math.abs(transaction.getTransactionAmount());
                 transactionCost = "Ksh" + Math.abs(transaction.getTransactionCost());
             }
-            if(!transaction.getCategories().isEmpty()) {
+
+            if (!transaction.getCategories().isEmpty()) {
                 for (TransactionCategory category : transaction.getCategories()) {
                     categoryNames.add(category.getName());
                 }
@@ -1145,10 +1152,9 @@ public class TransactionServiceImpl implements TransactionService{
             allTransactionsReportModel.add(model);
         }
 
-        // Create a data source for JasperReports
+        // Prepare JasperReports data source and parameters
         JRBeanCollectionDataSource allTransactionsDataSource = new JRBeanCollectionDataSource(allTransactionsReportModel);
 
-        // Parameters for the report
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("owner", owner);
         parameters.put("startDate", formattedStartDate);
@@ -1159,17 +1165,18 @@ public class TransactionServiceImpl implements TransactionService{
         parameters.put("size", transactions.size());
         parameters.put("allTransactionsDataset", allTransactionsDataSource);
 
-        // Corrected path for the JRXML file
+        // Path to the JRXML file
         String jrxmlPath = "/templates/AllTransactionsReport.jrxml";
 
         try (InputStream jrxmlInput = this.getClass().getResourceAsStream(jrxmlPath);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             if (jrxmlInput == null) {
                 throw new IllegalStateException("JRXML file not found at path: " + jrxmlPath);
             }
             JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
             JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            // Export the report to a PDF
             JRPdfExporter exporter = new JRPdfExporter();
             SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
             configuration.setCompressed(true);
@@ -1178,14 +1185,13 @@ public class TransactionServiceImpl implements TransactionService{
             exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
             exporter.exportReport();
 
-//            JasperExportManager.exportReportToPdfStream(print, baos);
             return byteArrayOutputStream;
         } catch (Exception e) {
             e.printStackTrace();
             throw new JRException("Error generating report", e);
         }
-
     }
+
 
     @Override
     public Map<String, Object> getDashboardDetails(Integer userId, String date) {
