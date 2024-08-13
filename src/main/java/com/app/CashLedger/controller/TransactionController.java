@@ -167,6 +167,8 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.deleteAllTransactions(), "Deleted all transactions", HttpStatus.OK);
     }
 
+    @PutMapping("transaction/")
+
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(Response.builder()

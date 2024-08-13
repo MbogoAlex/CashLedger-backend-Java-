@@ -26,6 +26,7 @@ public class TransactionDto {
     private String nickName;
     private String entity;
     private Double balance;
+    private String comment;
     private List<Category> categories = new ArrayList<>();
     @Data
     @AllArgsConstructor

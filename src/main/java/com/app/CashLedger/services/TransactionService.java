@@ -1,6 +1,7 @@
 package com.app.CashLedger.services;
 
 import com.app.CashLedger.dto.MessageDto;
+import com.app.CashLedger.dto.TransactionCommentPayload;
 import com.app.CashLedger.dto.TransactionDto;
 import com.app.CashLedger.dto.TransactionEditDto;
 import com.app.CashLedger.models.Transaction;
@@ -46,5 +47,7 @@ public interface TransactionService {
     Map<String, Object> getDashboardDetails(Integer userId, String date);
 
     String deleteAllTransactions();
+
+    TransactionDto transactionComment(TransactionCommentPayload transactionCommentPayload);
 
 }

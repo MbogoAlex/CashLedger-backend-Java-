@@ -37,6 +37,8 @@ public class Transaction {
     private String sender;
     private String recipient;
     private String nickName;
+    @Column(length = 500)
+    private String comment;
     private String entity;
     private Double balance;
 

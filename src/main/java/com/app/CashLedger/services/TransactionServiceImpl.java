@@ -792,28 +792,65 @@ public class TransactionServiceImpl implements TransactionService{
     @Override
     public String updateTransaction(TransactionEditDto transactionEditDto) {
         Transaction transaction = transactionDao.getTransaction(transactionEditDto.getTransactionId());
-        transaction.setNickName(transactionEditDto.getNickName());
 
-        List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
+        if(transactionEditDto.getNickName() != null) {
+            if(transaction.getNickName() == null) {
+                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
 
-        List<TransactionCategory> categories = transaction.getCategories();
+                List<TransactionCategory> categories = transaction.getCategories();
 
-        if(!categories.isEmpty()) {
-            for(TransactionCategory category : categories) {
-                List<CategoryKeyword> categoryKeywords = category.getKeywords();
-                for(CategoryKeyword keyword : categoryKeywords) {
-                    if(keyword.getKeyword().equals(transaction.getSender()) || keyword.getKeyword().equals(transaction.getRecipient())) {
-                        keyword.setNickName(transaction.getNickName());
-                        categoryDao.updateKeyword(keyword);
+                if(!categories.isEmpty()) {
+                    for(TransactionCategory category : categories) {
+                        List<CategoryKeyword> categoryKeywords = category.getKeywords();
+                        for(CategoryKeyword keyword : categoryKeywords) {
+                            if(keyword.getKeyword().equals(transaction.getSender()) || keyword.getKeyword().equals(transaction.getRecipient())) {
+                                keyword.setNickName(transaction.getNickName());
+                                categoryDao.updateKeyword(keyword);
+                            }
+                        }
                     }
                 }
+
+                for(Transaction transaction1 : transactions) {
+                    transaction1.setNickName(transactionEditDto.getNickName());
+                    transactionDao.updateTransaction(transaction1);
+                }
+            } else if(!transaction.getNickName().equalsIgnoreCase(transactionEditDto.getNickName())) {
+                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
+
+                List<TransactionCategory> categories = transaction.getCategories();
+
+                if(!categories.isEmpty()) {
+                    for(TransactionCategory category : categories) {
+                        List<CategoryKeyword> categoryKeywords = category.getKeywords();
+                        for(CategoryKeyword keyword : categoryKeywords) {
+                            if(keyword.getKeyword().equals(transaction.getSender()) || keyword.getKeyword().equals(transaction.getRecipient())) {
+                                keyword.setNickName(transaction.getNickName());
+                                categoryDao.updateKeyword(keyword);
+                            }
+                        }
+                    }
+                }
+
+                for(Transaction transaction1 : transactions) {
+                    transaction1.setNickName(transactionEditDto.getNickName());
+                    transactionDao.updateTransaction(transaction1);
+                }
             }
+
         }
 
-        for(Transaction transaction1 : transactions) {
-            transaction1.setNickName(transactionEditDto.getNickName());
-            transactionDao.updateTransaction(transaction1);
+        if(transactionEditDto.getComment() != null) {
+            transaction.setNickName(transactionEditDto.getNickName());
+            if(transaction.getComment() != null) {
+                transaction.setComment(transaction.getComment());
+            }
+            transactionDao.updateTransaction(transaction);
         }
+
+
+
+
 
         return "Transactions updated";
     }
@@ -1188,6 +1225,13 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionDao.deleteAllTransactions();
     }
 
+    @Override
+    public TransactionDto transactionComment(TransactionCommentPayload transactionCommentPayload) {
+        Transaction transaction = transactionDao.getTransaction(transactionCommentPayload.getTransactionId());
+        transaction.setComment(transactionCommentPayload.getComment());
+        return transactionToTransactionDto(transactionDao.updateTransaction(transaction));
+    }
+
 
     private TransactionDto transactionToTransactionDto(Transaction transaction) {
         List<TransactionDto.Category> categories = new ArrayList<>();
@@ -1211,6 +1255,7 @@ public class TransactionServiceImpl implements TransactionService{
                 .nickName(transaction.getNickName())
                 .entity(transaction.getEntity())
                 .balance(transaction.getBalance())
+                .comment(transaction.getComment())
                 .categories(categories)
                 .build();
         return transactionDto;
