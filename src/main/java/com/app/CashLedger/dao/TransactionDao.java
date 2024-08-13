@@ -499,7 +499,7 @@ public class TransactionDao {
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
                 "group by coalesce(t.entity, ''), t.nickName, lower(t.transactionType) " +
-                "order by times desc";
+                "order by sum(abs(t.transactionAmount)) desc";
 
         TypedQuery<Object[]> query = entityManager.createQuery(hql, Object[].class);
         query.setParameter("id", userId);
@@ -512,6 +512,7 @@ public class TransactionDao {
 
         return query.getResultList();
     }
+
 
     String firstTransactionDate(Integer userId) {
         List<Transaction> transactions = getAllTransactions(userId);
