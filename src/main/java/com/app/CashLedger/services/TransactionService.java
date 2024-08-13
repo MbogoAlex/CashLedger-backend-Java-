@@ -17,6 +17,8 @@ import java.util.Map;
 public interface TransactionService {
     TransactionDto addTransaction(Transaction transaction);
 
+    TransactionDto getTransaction(Integer transactionId);
+
     List<TransactionDto> addTransactions(List<TransactionDto> transactions, Integer userId);
 
     TransactionDto extractTransactionDetails(MessageDto message, UserAccount userAccount);

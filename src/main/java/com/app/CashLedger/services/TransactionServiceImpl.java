@@ -55,6 +55,11 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
+    public TransactionDto getTransaction(Integer transactionId) {
+        return transactionToTransactionDto(transactionDao.getTransaction(transactionId));
+    }
+
+    @Override
     public List<TransactionDto> addTransactions(List<TransactionDto> transactions, Integer userId) {
         UserAccount userAccount = userAccountDao.getUser(userId);
         List<Transaction> existingTransactions = userAccount.getTransactions();

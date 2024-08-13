@@ -40,6 +40,11 @@ public class TransactionController {
         return buildResponse("transaction", transactionService.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
+    @GetMapping("transaction/single/{id}")
+    public ResponseEntity<Response> getTransaction(@PathVariable("id") Integer transactionId) {
+        return buildResponse("transaction", transactionService.getTransaction(transactionId), "Transaction fetched", HttpStatus.OK);
+    }
+
     @GetMapping("transaction/sorted/{id}")
     public ResponseEntity<Response> getUserTransactionsSorted(
             @PathVariable("id") Integer userId,
