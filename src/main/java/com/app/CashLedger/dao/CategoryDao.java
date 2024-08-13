@@ -44,6 +44,11 @@ public class CategoryDao {
         return query.getSingleResult();
     }
 
+//    public CategoryKeyword getCategoryKeywWordBykeyWord(String keyword) {
+//        TypedQuery<CategoryKeyword> query = entityManager.createQuery("from CategoryKeyword where id = :id", CategoryKeyword.class);
+//        return query.getSingleResult();
+//    }
+
     public List<TransactionCategory> getCategories(Integer userId, Integer categoryId, String name, String orderBy) {
         StringBuilder queryString = new StringBuilder("from TransactionCategory t where t.userAccount.id = :id");
 

@@ -763,6 +763,7 @@ public class TransactionServiceImpl implements TransactionService{
 
                 if (!categories.isEmpty()) {
                     for (TransactionCategory transactionCategory : categories) {
+//                        System.out.println("ADDING TRANSACTION TO CATEGORY");
                         categoryService.addTransactionToCategory(transaction, transactionCategory.getId());
                     }
                 }

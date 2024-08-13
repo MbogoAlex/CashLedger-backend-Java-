@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CategoryServiceImpl implements CategoryService{
@@ -81,18 +83,39 @@ public class CategoryServiceImpl implements CategoryService{
     @Transactional
     @Override
     public TransactionCategoryDto addTransactionToCategory(Transaction transaction, Integer categoryId) {
+//        System.out.println("ADDING_TRANSACTION: "+ transaction.toString());
         TransactionCategory category = categoryDao.getCategory(categoryId);
-        List<Transaction> existingTransactions = category.getTransactions();
-        category.setUpdatedTimes(category.getUpdatedTimes() + 1);
-        category.setUpdatedAt(LocalDateTime.now());
+        Double updatedTimes = category.getUpdatedTimes();
 
-        for(Transaction transaction1 : existingTransactions) {
-            if(transaction.getEntity().equalsIgnoreCase(transaction1.getEntity())) {
-                transaction.getCategories().add(category);
-                category.getTransactions().add(transaction);
-                break;
-            }
+        if(updatedTimes == null) {
+            updatedTimes = 0.0;
         }
+
+
+        List<CategoryKeyword> categoryKeywords = category.getKeywords();
+        // Step 1: Pre-process the categoryKeywords into a HashMap for faster lookup.
+        Map<String, CategoryKeyword> keywordMap = new HashMap<>();
+        for (CategoryKeyword categoryKeyword : categoryKeywords) {
+            keywordMap.put(categoryKeyword.getKeyword().toLowerCase(), categoryKeyword);
+        }
+
+// Step 2: Look up the transaction entity in the keyword map.
+        String entityLower = transaction.getEntity().toLowerCase();
+        CategoryKeyword matchingKeyword = keywordMap.get(entityLower);
+
+        if (matchingKeyword != null) {
+            transaction.getCategories().add(category);
+            category.getTransactions().add(transaction);
+            try {
+                category.setUpdatedTimes(updatedTimes + 1.0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            category.setUpdatedAt(LocalDateTime.now());
+            // categoryDao.updateCategory(category);
+//            System.out.println("Updated category");
+        }
+
 
         return transformTransactionCategory(categoryDao.updateCategory(category));
     }

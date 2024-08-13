@@ -416,15 +416,7 @@ public class TransactionDao {
         // Convert month name to number
         int month = Month.valueOf(monthName.toUpperCase()).getValue();
 
-        // Log parameters for debugging
-        System.out.println("Query Parameters:");
-        System.out.println("User ID: " + userId);
-        System.out.println("Entity: " + entity);
-        System.out.println("Category ID: " + categoryId);
-        System.out.println("Budget ID: " + budgetId);
-        System.out.println("Transaction Type: " + transactionType);
-        System.out.println("Month: " + monthName + " (" + month + ")");
-        System.out.println("Year: " + year);
+
 
         String hql = "select t.date, " +
                 "TO_CHAR(t.date, 'Month') as month, " +
@@ -460,11 +452,7 @@ public class TransactionDao {
 
         List<Object[]> results = query.getResultList();
 
-        // Log results for debugging
-        System.out.println("Results Size: " + results.size());
-        for (Object[] result : results) {
-            System.out.println("Date: " + result[0] + ", Month: " + result[1] + ", Year: " + result[2] + ", Times: " + result[3] + ", Total Money In: " + result[4] + ", Total Money Out: " + result[5] + ", Total Cost: " + result[6]);
-        }
+
 
         return results;
     }
@@ -561,8 +549,6 @@ public class TransactionDao {
         // Execute the query
         Object[] result = query.getSingleResult();
 
-        System.out.println("RESULT:");
-        System.out.println(result);
 
         // Initialize default values
         Double totalIn = result[0] != null ? (Double) result[0] : 0.0;
