@@ -846,10 +846,7 @@ public class TransactionServiceImpl implements TransactionService{
         }
 
         if(transactionEditDto.getComment() != null) {
-            transaction.setNickName(transactionEditDto.getNickName());
-            if(transaction.getComment() != null) {
-                transaction.setComment(transaction.getComment());
-            }
+            transaction.setComment(transactionEditDto.getComment());
             transactionDao.updateTransaction(transaction);
         }
 
