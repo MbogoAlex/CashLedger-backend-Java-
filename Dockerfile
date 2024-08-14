@@ -10,12 +10,14 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/CashLedger-0.0.1-SNAPSHOT.jar CashLedger.jar
-
-# Copy the compiled .jasper files
-COPY --from=build /app/src/main/resources/templates/AllTransactionsReport.jasper /app/templates/AllTransactionsReport.jasper
-
-# If you have other resources like images, copy them as well
+COPY --from=build /app/src/main/resources/templates /app/templates
 COPY --from=build /app/src/main/resources/cashledger-logo.png /app/resources/cashledger-logo.png
+
+# Add jdt-compiler JAR
+COPY /home/mbogo/Desktop/CashLedger/CashLedger/src/main/java/com/app/CashLedger/lib/jdt-compiler-3.1.1.jar /app/lib/jdt-compiler-3.1.1.jar
+
+# Set CLASSPATH to include the JAR
+ENV CLASSPATH="/app/lib/jdt-compiler-3.1.1.jar:${CLASSPATH}"
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","CashLedger.jar"]
