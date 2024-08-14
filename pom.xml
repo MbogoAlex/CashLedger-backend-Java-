@@ -114,12 +114,13 @@
 
 
 		<!-- ECJ Compiler for JasperReports -->
+		<!-- https://mvnrepository.com/artifact/org.eclipse.jdt.core.compiler/ecj -->
 		<dependency>
 			<groupId>org.eclipse.jdt.core.compiler</groupId>
 			<artifactId>ecj</artifactId>
 			<version>4.6.1</version>
-			<scope>compile</scope>
 		</dependency>
+
 
 		<!-- https://mvnrepository.com/artifact/org.eclipse.jdt/org.eclipse.jdt.core -->
 		<dependency>
