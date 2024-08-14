@@ -121,7 +121,12 @@
 			<version>4.6.1</version>
 		</dependency>
 
-
+		<!-- https://mvnrepository.com/artifact/net.sf.jasperreports/jasperreports-jdt -->
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports-jdt</artifactId>
+			<version>7.0.0</version>
+		</dependency>
 
 
 		<!-- https://mvnrepository.com/artifact/org.eclipse.jdt/org.eclipse.jdt.core -->
