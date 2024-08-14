@@ -51,31 +51,31 @@
     <title height="240" splitType="Stretch">
         <element kind="frame" uuid="1a871d9f-2e48-4129-a0f0-602b25efbe89" x="-10" y="10" width="570" height="230">
             <property name="com.jaspersoft.studio.unit.height" value="px"/>
-            <element kind="staticText" uuid="8baf863e-0208-4c0c-bf80-ac799d80061f" x="20" y="10" width="150" height="30" forecolor="#1F8C31" markup="none" fontName="Times New Roman" fontSize="22.0">
+            <element kind="staticText" uuid="8baf863e-0208-4c0c-bf80-ac799d80061f" x="20" y="10" width="150" height="30" forecolor="#1F8C31" markup="none" fontName="Arial" fontSize="22.0">
                 <text><![CDATA[Cash Ledger]]></text>
             </element>
-            <element kind="staticText" uuid="a6cff16e-1655-4fd6-8650-f7d81364a7a8" x="20" y="40" width="200" height="20" fontName="Times New Roman" fontSize="16.0">
+            <element kind="staticText" uuid="a6cff16e-1655-4fd6-8650-f7d81364a7a8" x="20" y="40" width="200" height="20" fontName="Arial" fontSize="16.0">
                 <text><![CDATA[MPESA transactions report]]></text>
             </element>
-            <element kind="staticText" uuid="e76a6374-8503-41a4-ae8f-2114e7850c82" x="20" y="80" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Times New Roman" fontSize="15.0">
+            <element kind="staticText" uuid="e76a6374-8503-41a4-ae8f-2114e7850c82" x="20" y="80" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Arial" fontSize="15.0">
                 <text><![CDATA[Owner:]]></text>
             </element>
-            <element kind="textField" uuid="8c5395c4-a406-4196-845c-d5bd0d4cfddf" x="150" y="80" width="160" height="20" fontName="Times New Roman" fontSize="15.0">
+            <element kind="textField" uuid="8c5395c4-a406-4196-845c-d5bd0d4cfddf" x="150" y="80" width="160" height="20" fontName="Arial" fontSize="15.0">
                 <expression><![CDATA[$P{owner}]]></expression>
             </element>
-            <element kind="staticText" uuid="6d3d234d-3c31-4552-980b-9e77035c69b3" x="20" y="110" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Times New Roman" fontSize="15.0">
+            <element kind="staticText" uuid="6d3d234d-3c31-4552-980b-9e77035c69b3" x="20" y="110" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Arial" fontSize="15.0">
                 <text><![CDATA[Start date:]]></text>
             </element>
-            <element kind="textField" uuid="e2aeed8f-df5d-4238-8ef3-cab550e18f86" x="150" y="110" width="160" height="20" fontName="Times New Roman" fontSize="15.0">
+            <element kind="textField" uuid="e2aeed8f-df5d-4238-8ef3-cab550e18f86" x="150" y="110" width="160" height="20" fontName="Arial" fontSize="15.0">
                 <expression><![CDATA[$P{startDate}]]></expression>
             </element>
-            <element kind="staticText" uuid="471135b2-aef6-43d7-a59e-f5abcf5f3690" x="20" y="140" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Times New Roman" fontSize="15.0">
+            <element kind="staticText" uuid="471135b2-aef6-43d7-a59e-f5abcf5f3690" x="20" y="140" width="80" height="20" forecolor="#1F8C31" markup="none" fontName="Arial" fontSize="15.0">
                 <text><![CDATA[End date:]]></text>
             </element>
-            <element kind="textField" uuid="30321f40-180f-4f69-83c8-894bad660e95" x="150" y="140" width="160" height="20" fontName="Times New Roman" fontSize="15.0">
+            <element kind="textField" uuid="30321f40-180f-4f69-83c8-894bad660e95" x="150" y="140" width="160" height="20" fontName="Arial" fontSize="15.0">
                 <expression><![CDATA[$P{endDate}]]></expression>
             </element>
-            <element kind="staticText" uuid="e86c5d46-8ff0-4246-9f82-18a48e4cdfee" x="180" y="190" width="140" height="25" fontName="Times New Roman" fontSize="12.0" hTextAlign="Left">
+            <element kind="staticText" uuid="e86c5d46-8ff0-4246-9f82-18a48e4cdfee" x="180" y="190" width="140" height="25" fontName="Arial" fontSize="12.0" hTextAlign="Left">
                 <text><![CDATA[]]></text>
             </element>
             <element kind="textField" uuid="15cebd39-b784-45ec-bb24-3173814e2499" x="370" y="212" width="100" height="20" pattern="MMMMM dd, yyyy">
