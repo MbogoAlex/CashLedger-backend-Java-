@@ -3,9 +3,9 @@
 
     <fontFamily name="Times New Roman">
         <normal><![CDATA[fonts/Times_New_Roman.ttf]]></normal>
-        <bold><![CDATA[fonts/Times_New_Roman_Bold.ttf.ttf]]></bold>
-        <italic><![CDATA[fonts/Times_New_Roman_Italic.ttf.ttf]]></italic>
-        <boldItalic><![CDATA[fonts/Times_New_Roman_Bold_Italic.ttf.ttf]]></boldItalic>
+        <bold><![CDATA[fonts/Times_New_Roman_Bold.ttf.]]></bold>
+        <italic><![CDATA[fonts/Times_New_Roman_Italic.ttf.]]></italic>
+        <boldItalic><![CDATA[fonts/Times_New_Roman_Bold_Italic.ttf.]]></boldItalic>
         <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
     </fontFamily>
 
