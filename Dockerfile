@@ -10,7 +10,12 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/CashLedger-0.0.1-SNAPSHOT.jar CashLedger.jar
-COPY --from=build /app/src/main/resources/templates /app/templates
+
+# Copy the compiled .jasper files
+COPY --from=build /app/src/main/resources/templates/AllTransactionsReport.jasper /app/templates/AllTransactionsReport.jasper
+
+# If you have other resources like images, copy them as well
 COPY --from=build /app/src/main/resources/cashledger-logo.png /app/resources/cashledger-logo.png
+
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","CashLedger.jar"]
