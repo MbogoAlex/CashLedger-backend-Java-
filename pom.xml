@@ -104,18 +104,30 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/net.sf.jasperreports/jasperreports -->
+		<!-- JasperReports Core Library -->
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
 			<version>7.0.0</version>
+			<scope>compile</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.eclipse.jdt.core.compiler/ecj -->
+
+		<!-- JasperReports PDF Export Library -->
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports-pdf</artifactId>
+			<version>7.0.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- ECJ Compiler for JasperReports -->
 		<dependency>
 			<groupId>org.eclipse.jdt.core.compiler</groupId>
 			<artifactId>ecj</artifactId>
 			<version>4.6.1</version>
+			<scope>compile</scope>
 		</dependency>
+
 
 
 
