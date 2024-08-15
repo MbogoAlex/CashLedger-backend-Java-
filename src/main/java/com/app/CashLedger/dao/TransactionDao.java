@@ -509,7 +509,7 @@ public class TransactionDao {
     }
 
     List<Transaction> latestTransactions(Integer userId) {
-        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc", Transaction.class);
+        TypedQuery<Transaction> query = entityManager.createQuery("from Transaction where userAccount.id = :id order by date desc, time desc", Transaction.class);
         query.setParameter("id", userId);
         query.setMaxResults(2);
         return query.getResultList();
