@@ -201,6 +201,16 @@ public class BudgetServiceImpl implements BudgetService{
     }
 
     private BudgetResponseDto budgetToBudgetResponseDto(Budget budget, Double expenditure) {
+        String budgetOwner = "";
+        UserAccount user = budget.getUserAccount();
+        if(user.getFname() != null) {
+            budgetOwner = user.getFname();
+        } else if(user.getLname() != null) {
+            budgetOwner = user.getLname();
+        } else {
+            budgetOwner = user.getPhoneNumber();
+        }
+
         BudgetResponseDto.Category category = BudgetResponseDto.Category.builder()
                 .id(budget.getCategory().getId())
                 .name(budget.getCategory().getName())
@@ -208,7 +218,7 @@ public class BudgetServiceImpl implements BudgetService{
 
         BudgetResponseDto.UserDetailsDto userDetailsDto = BudgetResponseDto.UserDetailsDto.builder()
                 .id(budget.getUserAccount().getId())
-                .name(budget.getUserAccount().getFname())
+                .name(budgetOwner)
                 .build();
 
         BudgetResponseDto budgetResponseDto = BudgetResponseDto.builder()
