@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 public class AppVersionServiceImpl implements AppVersionService {
     @Override
     public Double getCurrentAppVersion() {
-        Double appVersion = 80.0;
-        return appVersion;
+        return 80.0;
     }
 }

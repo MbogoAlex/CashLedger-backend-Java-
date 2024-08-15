@@ -113,6 +113,7 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Override
     public Boolean getSubscriptionFeePaymentStatus(PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException {
+        System.out.println("CHECKING PAYMENT STATUS");
         Gson gson = new Gson();
         String orderId = paymentStatusPayload.getOrderId();
         String token = paymentStatusPayload.getToken();
@@ -144,6 +145,7 @@ public class PaymentServiceImpl implements PaymentService{
     }
 //    @Transactional
     public Boolean savePayment(Integer userId) {
+        System.out.println("Saving payment");
         UserAccount userAccount = userAccountDao.getUser(userId);
         Payment payment = Payment.builder()
                 .month(LocalDateTime.now().getMonth())
@@ -154,6 +156,7 @@ public class PaymentServiceImpl implements PaymentService{
                 .build();
         System.out.println(payment);
         paymentDao.makePayment(payment);
+        System.out.println("Payment saved");
         return true;
     }
 

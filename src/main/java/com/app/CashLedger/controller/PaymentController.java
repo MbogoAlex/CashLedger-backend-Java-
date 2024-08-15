@@ -30,6 +30,7 @@ public class PaymentController {
 
     @PostMapping("payment/ipn")
     public ResponseEntity<Response> getInstantPaymentNotification(@RequestBody Map<String, Object> ipn) {
+        System.out.println("CHECKING PAYMENT STATUS");
         System.out.println(ipn);
         return buildResponse("ipn", ipn, "IPN received", HttpStatus.OK);
     }
