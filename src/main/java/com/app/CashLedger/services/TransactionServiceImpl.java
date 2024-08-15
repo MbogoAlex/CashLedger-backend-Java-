@@ -1004,7 +1004,7 @@ public class TransactionServiceImpl implements TransactionService{
             if(transaction.getTransactionAmount().toString().startsWith("-")) {
                 totalMoneyOut = totalMoneyOut + Math.abs(transaction.getTransactionAmount());
             } else {
-                System.out.println("Sender: "+transaction.getSender()+" Recipient: "+transaction.getRecipient());
+//                System.out.println("Sender: "+transaction.getSender()+" Recipient: "+transaction.getRecipient());
                 totalMoneyIn = totalMoneyIn + Math.abs(transaction.getTransactionAmount());
             }
             transactionDtos.add(transactionToTransactionDto(transaction));
@@ -1023,8 +1023,8 @@ public class TransactionServiceImpl implements TransactionService{
         List<Map<String, Object>> transformedResult = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
         for (Object[] row : result) {
-            System.out.println("GROUPED TRANSACTIONS");
-            System.out.println(Arrays.toString(row));
+//            System.out.println("GROUPED TRANSACTIONS");
+//            System.out.println(Arrays.toString(row));
             Map<String, Object> map = new HashMap<>();
             map.put("nickName", row[0]);
             map.put("transactionType", row[1]);
