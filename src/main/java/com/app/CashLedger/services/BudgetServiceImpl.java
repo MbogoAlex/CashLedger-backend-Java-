@@ -130,8 +130,7 @@ public class BudgetServiceImpl implements BudgetService{
 
 
         for(Budget budget : budgets) {
-            List<Transaction> transactions = transactionDao.getGeneralTransactions(budget.getUserAccount().getId(), budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
-
+            List<Transaction> transactions = transactionDao.getUserTransactions(budget.getUserAccount().getId(), null, budget.getCategory().getId(), budget.getId(), null, true,  budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
             double budgetExceededBy = 0.0;
             boolean budgetLimitReached = false;
             double expenditure = 0.0;
