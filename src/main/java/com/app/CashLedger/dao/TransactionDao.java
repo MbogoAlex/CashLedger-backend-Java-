@@ -261,6 +261,7 @@ public class TransactionDao {
     public List<Transaction> getTransactionsForMultipleCategories(Integer userId, String entity, List<Integer> categoryIds, Integer budgetId, String transactionType, Boolean latest, String startDate, String endDate) {
         String orderClause = latest ? "desc" : "asc";
 
+        // Base HQL query
         String hql = "select t from Transaction t " +
                 "left join t.categories tc " +
                 "left join tc.budgets b " +
@@ -269,37 +270,34 @@ public class TransactionDao {
                 "((LOWER(t.sender) like concat('%', :entity, '%')) or " +
                 "(LOWER(t.nickName) like concat('%', :entity, '%')) or " +
                 "(LOWER(t.recipient) like concat('%', :entity, '%')))) " +
-                "and (:categoryIds is null or tc.id in :categoryIds) " +
+                // Check if categoryIds are provided
+                (categoryIds != null && !categoryIds.isEmpty() ? "and tc.id in :categoryIds " : "") +
                 "and (:budgetId is null or b.id = :budgetId) " +
                 "and (:transactionType is null or LOWER(t.transactionType) = :transactionType) " +
                 "and (t.date >= :startDate) " +
                 "and (t.date <= :endDate) " +
                 "order by t.date " + orderClause + ", t.time " + orderClause;
 
+        // Create query
         TypedQuery<Transaction> query = entityManager.createQuery(hql, Transaction.class);
+
+        // Set parameters
         query.setParameter("id", userId);
-        if (entity == null) {
-            query.setParameter("entity", "");
-        } else if (entity.toLowerCase().equals("you")) {
+
+        if (entity == null || entity.toLowerCase().equals("you")) {
             query.setParameter("entity", "");
         } else {
             query.setParameter("entity", entity.toLowerCase());
         }
 
-        // Set categoryIds parameter
-        if (categoryIds == null || categoryIds.isEmpty()) {
-            query.setParameter("categoryIds", null);
-        } else {
+        if (categoryIds != null && !categoryIds.isEmpty()) {
             query.setParameter("categoryIds", categoryIds);
         }
 
         query.setParameter("budgetId", budgetId);
-        if (transactionType != null) {
-            if (transactionType.isEmpty()) {
-                query.setParameter("transactionType", null);
-            } else {
-                query.setParameter("transactionType", transactionType.toLowerCase());
-            }
+
+        if (transactionType != null && !transactionType.isEmpty()) {
+            query.setParameter("transactionType", transactionType.toLowerCase());
         } else {
             query.setParameter("transactionType", null);
         }
@@ -318,6 +316,7 @@ public class TransactionDao {
 
         return query.getResultList();
     }
+
 
 
 
