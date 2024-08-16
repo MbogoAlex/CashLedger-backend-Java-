@@ -34,18 +34,19 @@ public class BudgetDao {
 
     public List<Budget> getUserBudgets(Integer id, String name) {
         TypedQuery<Budget> query = entityManager.createQuery("from Budget where userAccount.id = :id and " +
-                "(:name is null or LOWER(name) like concat('%', :name, '%')) or " +
-                        "(:name is null or LOWER(category.name) like concat('%', :name, '%')) " +
+                        "( :name is null or LOWER(name) like concat('%', :name, '%') or " +
+                        "LOWER(category.name) like concat('%', :name, '%') ) " +
                         "order by createdAt desc",
                 Budget.class);
         query.setParameter("id", id);
-        if(name != null) {
+        if (name != null) {
             query.setParameter("name", name.toLowerCase());
         } else {
             query.setParameter("name", "");
         }
         return query.getResultList();
     }
+
 
     public List<Budget> getCategoryBudgets(Integer id, String name) {
         TypedQuery<Budget> query = entityManager.createQuery(

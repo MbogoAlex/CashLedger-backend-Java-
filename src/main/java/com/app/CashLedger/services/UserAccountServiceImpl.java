@@ -1,10 +1,7 @@
 package com.app.CashLedger.services;
 
 import com.app.CashLedger.dao.UserAccountDao;
-import com.app.CashLedger.dto.MessageDto;
-import com.app.CashLedger.dto.RegistrationDetailsDto;
-import com.app.CashLedger.dto.TransactionDto;
-import com.app.CashLedger.dto.UserDetailsDto;
+import com.app.CashLedger.dto.*;
 import com.app.CashLedger.dto.payment.SubscriptionDetails;
 import com.app.CashLedger.dto.profile.PasswordUpdatePayload;
 import com.app.CashLedger.models.*;
@@ -82,6 +79,35 @@ public class UserAccountServiceImpl implements UserAccountService{
             transformedUsers.add(userAccountToUserDetailsDto(userAccount));
         }
         return transformedUsers;
+    }
+
+    @Override
+    public List<UserDto> filterUsers(String name, String phoneNumber, String startDate, String endDate) {
+        List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, startDate, endDate);
+        List<UserDto> userDtos = new ArrayList<>();
+        for(UserAccount userAccount : userAccounts) {
+            userDtos.add(userToUserDto(userAccount));
+        }
+        return userDtos;
+    }
+
+    public UserDto userToUserDto(UserAccount userAccount) {
+        String name = "";
+        if(userAccount.getFname() != null && userAccount.getLname() != null) {
+            name = userAccount.getFname() + " " + userAccount.getLname();
+        } else if(userAccount.getFname() != null) {
+            name = userAccount.getFname();
+        } else if(userAccount.getLname() != null) {
+            name = userAccount.getLname();
+        }
+        return UserDto.builder()
+                .userId(userAccount.getId())
+                .name(name)
+                .email(userAccount.getEmail())
+                .phoneNumber(userAccount.getPhoneNumber())
+                .createdOn(userAccount.getCreatedAt().toString())
+                .transactionsSize(userAccount.getTransactions().size())
+                .build();
     }
 
     private UserDetailsDto userAccountToUserDetailsDto(UserAccount userAccount) {

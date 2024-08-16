@@ -6,6 +6,8 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -36,6 +38,21 @@ public class UserAccountDao {
 
     public List<UserAccount> getUsers() {
         TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount", UserAccount.class);
+        return query.getResultList();
+    }
+
+    public List<UserAccount> filterUsers(String name, String phoneNumber, String startDate, String endDate) {
+        TypedQuery<UserAccount> query = entityManager.createQuery("from UserAccount u where " +
+                "(:name is null or u.fname like concat('%', :name, '%') or u.lname like concat('%', :name, '%')) and " +
+                "(:phoneNumber is null or u.phoneNumber like concat('%', :phoneNumber, '%')) and " +
+                "(:startDate is null or DATE(u.createdAt) >= :startDate) and " +
+                "(:endDate is null or DATE(u.createdAt) <= :endDate)", UserAccount.class);
+
+        query.setParameter("name", name);
+        query.setParameter("phoneNumber", phoneNumber);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
+
         return query.getResultList();
     }
 

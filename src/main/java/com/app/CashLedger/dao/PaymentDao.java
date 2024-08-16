@@ -22,6 +22,17 @@ public class PaymentDao {
         return payment;
     }
 
+    public List<Payment> getPayments(String name, String month, String phoneNumber, String startDate, String endDate) {
+        TypedQuery<Payment> query = entityManager.createQuery("from Payment where name is null or " +
+                "userAccount.fname = :name or " +
+                "name is null or userAccount.lname = :name or " +
+                "phoneNumber is null or userAccount.phoneNumber = :phoneNumber and " +
+                "DATE(paidAt) >= :startDate and " +
+                "DATE(paidAt) <= :startDate", Payment.class);
+
+        return query.getResultList();
+    }
+
     public List<Payment> getLatestPayment(Integer userId) {
         TypedQuery<Payment> query = entityManager.createQuery("from Payment where userAccount.id = :userId order by paidAt desc", Payment.class);
         query.setParameter("userId", userId);
