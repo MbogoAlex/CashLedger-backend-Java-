@@ -1,11 +1,11 @@
 package com.app.CashLedger.services;
 
-import com.app.CashLedger.dto.CategoryEditDto;
-import com.app.CashLedger.dto.CategoryKeywordDto;
-import com.app.CashLedger.dto.CategoryKeywordEditDto;
-import com.app.CashLedger.dto.TransactionCategoryDto;
+import com.app.CashLedger.dto.*;
 import com.app.CashLedger.models.Transaction;
+import net.sf.jasperreports.engine.JRException;
 
+import java.io.ByteArrayOutputStream;
+import java.text.ParseException;
 import java.util.List;
 
 public interface CategoryService {
@@ -24,5 +24,7 @@ public interface CategoryService {
 
     String deleteCategory(Integer id);
     String deleteCategoryKeyword(Integer categoryId, Integer keywordId);
+
+    ByteArrayOutputStream generateMultipleCategoriesReport(MultipleCategoriesReportDto multipleCategoriesReportDto) throws JRException, ParseException;
 
 }

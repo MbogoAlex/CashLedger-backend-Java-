@@ -94,7 +94,7 @@ public class BudgetServiceImpl implements BudgetService{
     @Override
     public BudgetResponseDto getBudget(Integer budgetId) {
         Budget budget = budgetDao.getBudget(budgetId);
-        List<Transaction> transactions = transactionDao.getGeneralTransactions(budget.getUserAccount().getId(), budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
+        List<Transaction> transactions = transactionDao.getUserTransactions(budget.getUserAccount().getId(), null, budget.getCategory().getId(), budget.getId(), null, true,  budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
         System.out.println(transactions.size());
 
         double budgetExceededBy = 0.0;

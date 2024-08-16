@@ -3,13 +3,19 @@ package com.app.CashLedger.controller;
 import com.app.CashLedger.dto.CategoryEditDto;
 import com.app.CashLedger.dto.CategoryKeywordDto;
 import com.app.CashLedger.dto.CategoryKeywordEditDto;
+import com.app.CashLedger.dto.MultipleCategoriesReportDto;
 import com.app.CashLedger.models.Response;
 import com.app.CashLedger.services.CategoryService;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 
 import static java.util.Map.of;
@@ -65,6 +71,16 @@ public class CategoryController {
     @DeleteMapping("category/keyword/{categoryId}/{keywordId}")
     public ResponseEntity<Response> deleteCategoryKeyword(@PathVariable("categoryId") Integer categoryId, @PathVariable("keywordId") Integer keywordId) {
         return buildResponse("keyword", categoryService.deleteCategoryKeyword(categoryId, keywordId), "Category keyword deleted", HttpStatus.OK);
+    }
+
+    @PostMapping("category/report")
+    public ResponseEntity<byte[]> generateReportForMultipleCategories(@RequestBody MultipleCategoriesReportDto multipleCategoriesReportDto) throws JRException, ParseException {
+        ByteArrayOutputStream reportStream = categoryService.generateMultipleCategoriesReport(multipleCategoriesReportDto);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+
+        return new ResponseEntity<>(reportStream.toByteArray(), headers, HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

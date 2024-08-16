@@ -6,15 +6,23 @@ import com.app.CashLedger.dao.TransactionDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.*;
 import com.app.CashLedger.models.*;
+import com.app.CashLedger.reportModel.AllTransactionsReportModel;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.pdf.JRPdfExporter;
+import net.sf.jasperreports.pdf.SimplePdfExporterConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class CategoryServiceImpl implements CategoryService{
@@ -204,6 +212,119 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public String deleteCategoryKeyword(Integer categoryId, Integer keywordId) {
         return categoryDao.deleteCategoryKeyword(categoryId, keywordId);
+    }
+
+    @Override
+    public ByteArrayOutputStream generateMultipleCategoriesReport(MultipleCategoriesReportDto multipleCategoriesReportDto) throws JRException, ParseException {
+
+        // Fetch user and transactions
+        UserAccount userAccount = userAccountDao.getUser(multipleCategoriesReportDto.getUserId());
+        List<Transaction> transactions = transactionDao.getTransactionsForMultipleCategories(
+                userAccount.getId(), null, multipleCategoriesReportDto.getCategoryIds(), null, null, true, multipleCategoriesReportDto.getStartDate(), multipleCategoriesReportDto.getLastDate());
+        List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
+
+        // Date formatting
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM dd, yyyy");
+
+        Date start = inputFormat.parse(multipleCategoriesReportDto.getStartDate());
+        Date end = inputFormat.parse(multipleCategoriesReportDto.getLastDate());
+
+        String formattedStartDate = outputFormat.format(start);
+        String formattedEndDate = outputFormat.format(end);
+
+        // Initialize totals
+        Double totalIn = 0.0;
+        Double totalOut = 0.0;
+        Double totalTransactionCost = 0.0;
+
+        // Determine report owner
+        String owner;
+        if (userAccount.getFname() == null && userAccount.getLname() == null) {
+            owner = userAccount.getPhoneNumber();
+        } else if (userAccount.getFname() == null) {
+            owner = userAccount.getLname();
+        } else if (userAccount.getLname() == null) {
+            owner = userAccount.getFname();
+        } else {
+            owner = userAccount.getFname() + " " + userAccount.getLname();
+        }
+
+        // Process transactions and build report models
+        for (Transaction transaction : transactions) {
+            List<String> categoryNames = new ArrayList<>();
+            String moneyIn = "-";
+            String moneyOut = "-";
+            String transactionCost = "-";
+
+            if (transaction.getTransactionAmount() > 0) {
+                totalIn += transaction.getTransactionAmount();
+                moneyIn = "Ksh" + transaction.getTransactionAmount();
+            } else if (transaction.getTransactionAmount() < 0) {
+                totalOut += Math.abs(transaction.getTransactionAmount());
+                totalTransactionCost += Math.abs(transaction.getTransactionCost());
+                moneyOut = "Ksh" + Math.abs(transaction.getTransactionAmount());
+                transactionCost = "Ksh" + Math.abs(transaction.getTransactionCost());
+            }
+
+            if (!transaction.getCategories().isEmpty()) {
+                for (TransactionCategory category : transaction.getCategories()) {
+                    categoryNames.add(category.getName());
+                }
+            } else {
+                categoryNames.add("-");
+            }
+
+            AllTransactionsReportModel model = AllTransactionsReportModel.builder()
+                    .datetime(transaction.getDate() + " " + transaction.getTime())
+                    .transactionType(transaction.getTransactionType())
+                    .category(String.join(", ", categoryNames))
+                    .entity(transaction.getEntity())
+                    .moneyIn(moneyIn)
+                    .moneyOut(moneyOut)
+                    .transactionCost(transactionCost)
+                    .build();
+            allTransactionsReportModel.add(model);
+        }
+
+        // Prepare JasperReports data source and parameters
+        JRBeanCollectionDataSource allTransactionsDataSource = new JRBeanCollectionDataSource(allTransactionsReportModel);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("owner", owner);
+        parameters.put("startDate", formattedStartDate);
+        parameters.put("endDate", formattedEndDate);
+        parameters.put("totalIn", "Ksh" + String.format("%.2f", totalIn));
+        parameters.put("totalOut", "Ksh" + String.format("%.2f", totalOut));
+        parameters.put("totalTransactionCost", "Ksh" + String.format("%.2f", totalTransactionCost));
+        parameters.put("size", transactions.size());
+        parameters.put("allTransactionsDataset", allTransactionsDataSource);
+
+        // Path to the JRXML file
+        String jrxmlPath = "/templates/AllTransactionsReport.jrxml";
+
+        try (InputStream jrxmlInput = this.getClass().getResourceAsStream(jrxmlPath);
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            if (jrxmlInput == null) {
+                throw new IllegalStateException("JRXML file not found at path: " + jrxmlPath);
+            }
+            JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
+            JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
+
+            // Export the report to a PDF
+            JRPdfExporter exporter = new JRPdfExporter();
+            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+            configuration.setCompressed(true);
+            exporter.setConfiguration(configuration);
+            exporter.setExporterInput(new SimpleExporterInput(print));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
+            exporter.exportReport();
+
+            return byteArrayOutputStream;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new JRException("Error generating report", e);
+        }
     }
 
     private TransactionCategoryDto transformTransactionCategory(TransactionCategory transactionCategory) {
