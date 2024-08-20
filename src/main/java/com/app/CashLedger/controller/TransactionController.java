@@ -62,6 +62,21 @@ public class TransactionController {
     ) {
         return buildResponse("transaction", transactionService.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
+    @GetMapping("transaction/sortamount/{userId}")
+    public ResponseEntity<Response> getUserTransactionsSortedByAmount(
+            @PathVariable("userId") Integer userId,
+            @RequestParam(value = "entity", required = false) String entity,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "budgetId", required = false) Integer budgetId,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "moneyIn", required = false) Boolean moneyIn,
+            @RequestParam(value = "orderByAmount", required = false) Boolean orderByAmount,
+            @RequestParam(value = "ascendingOrder", required = false) Boolean ascendingOrder,
+            @RequestParam(value = "startDate") String startDate,
+            @RequestParam(value = "endDate") String endDate
+    ) {
+        return buildResponse("transactions", transactionService.getUserTransactionsSorted(userId, entity, categoryId, budgetId, transactionType, moneyIn, orderByAmount, ascendingOrder, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+    }
 
     @GetMapping("transaction/grouped/{id}")
     public ResponseEntity<Response> getGroupedByDateTransactions(

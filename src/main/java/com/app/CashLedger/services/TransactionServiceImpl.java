@@ -927,7 +927,7 @@ public class TransactionServiceImpl implements TransactionService{
                 map.put("amount", row[4]);
             } else {
                 totalMoneyOut = totalMoneyOut + Math.abs((Double) row[4]);
-                map.put("amount", "-"+row[4]);
+                map.put("amount", row[4]);
             }
 
             map.put("transactionCost", row[5]);
