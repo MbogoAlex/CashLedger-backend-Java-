@@ -153,12 +153,30 @@ public class TransactionServiceImpl implements TransactionService{
                 Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(str);
 
-                boolean matches = matcher.find();
+                Pattern sendMoneyPattern = Pattern.compile("(.+?) (\\d{9,})$");
+                Matcher sendMoneyMatcher = sendMoneyPattern.matcher(str);
 
-                if(matches) {
-                    transactionType = "Pay Bill";
-                } else {
+                if (sendMoneyMatcher.find()) {
+                    // If a phone number is found after the name, classify it as "Send money"
                     transactionType = "Send Money";
+                } else {
+                    // If no phone number is found, classify it as "Pochi la Biashara"
+                    transactionType = "Pochi la Biashara";
+                }
+
+                if (str.contains("SAFARICOM DATA BUNDLES") ||
+                        str.contains("Tunukiwa") ||
+                        str.contains("TUNUKIWA") ||
+                        str.contains("Talkmore")) {
+
+                    transactionType = "Airtime & Bundles";
+                } else if (matcher.find()) {
+                    // If no match for "Airtime & bundles", check for "Pay Bill"
+                    transactionType = "Pay Bill";
+                }
+
+                if(recipient.contains("Safaricom")) {
+                    transactionType = "Airtime & Bundles";
                 }
 
                 // Parsing balance
@@ -263,7 +281,7 @@ public class TransactionServiceImpl implements TransactionService{
                 balance = Double.parseDouble(balanceMatcher.group(1).replace(",", "").replace(" ", ""));
 
             } else if(message.contains("of airtime on")) {
-                transactionType = "Airtime";
+                transactionType = "Airtime & Bundles";
 
                 // Extract transaction amount
                 Matcher amountMatcher = Pattern.compile("Ksh([\\d ,]+\\.\\d{2})+ of airtime").matcher(message);
@@ -289,7 +307,7 @@ public class TransactionServiceImpl implements TransactionService{
                 balanceMatcher.find();
                 balance = Double.parseDouble(balanceMatcher.group(1).replace(",", "").replace(" ", ""));
             } else if(message.contains("of airtime for")) {
-                transactionType = "Airtime";
+                transactionType = "Airtime & Bundles";
 
                 // Extract transaction amount
                 Matcher amountMatcher = Pattern.compile("Ksh([\\d ,]+\\.\\d{2})+ of airtime").matcher(message);
@@ -448,7 +466,7 @@ public class TransactionServiceImpl implements TransactionService{
                 balanceMatcher.find();
                 balance = Double.parseDouble(balanceMatcher.group(1).replace(",", "").replace(" ", ""));
 
-                transactionType = "Lock savings";
+                transactionType = "Mshwari";
                 transactionCost = 0.00;
                 sender = "You";
                 recipient = "Lock Savings Account";
@@ -801,7 +819,7 @@ public class TransactionServiceImpl implements TransactionService{
 
         if(transactionEditDto.getNickName() != null) {
             if(transaction.getNickName() == null) {
-                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
+                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, null,"2001-03-06", LocalDate.now().toString());
 
                 List<TransactionCategory> categories = transaction.getCategories();
 
@@ -822,7 +840,7 @@ public class TransactionServiceImpl implements TransactionService{
                     transactionDao.updateTransaction(transaction1);
                 }
             } else if(!transaction.getNickName().equalsIgnoreCase(transactionEditDto.getNickName())) {
-                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, "2001-03-06", LocalDate.now().toString());
+                List<Transaction> transactions = transactionDao.getUserTransactions(transactionEditDto.getUserId(), transactionEditDto.getEntity(), null, null, null, true, null,"2001-03-06", LocalDate.now().toString());
 
                 List<TransactionCategory> categories = transaction.getCategories();
 
@@ -870,8 +888,8 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String startDate, String endDate) {
-        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, startDate, endDate);
+    public Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String moneyDirection, String startDate, String endDate) {
+        List<Transaction> transactions = transactionDao.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, moneyDirection, startDate, endDate);
         List<TransactionDto> transformedTransactions = new ArrayList<>();
         Map<Object, Object> transactionsMap = new HashMap<>();
         Double totalMoneyOut = 0.0;
@@ -1016,8 +1034,8 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) {
-        List<Object[]> result = transactionDao.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+    public Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String startDate, String endDate) {
+        List<Object[]> result = transactionDao.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, moneyDirection, startDate, endDate);
         Double totalMoneyIn = 0.0;
         Double totalMoneyOut = 0.0;
         List<Map<String, Object>> transformedResult = new ArrayList<>();
@@ -1080,12 +1098,12 @@ public class TransactionServiceImpl implements TransactionService{
 
     public ByteArrayOutputStream generateAllTransactionsReport(
             Integer userId, String entity, Integer categoryId, Integer budgetId,
-            String transactionType, String startDate, String endDate) throws JRException, ParseException {
+            String transactionType, String moneyDirection, String startDate, String endDate) throws JRException, ParseException {
 
         // Fetch user and transactions
         UserAccount userAccount = userAccountDao.getUser(userId);
         List<Transaction> transactions = transactionDao.getUserTransactions(
-                userId, entity, categoryId, budgetId, transactionType, true, startDate, endDate);
+                userId, entity, categoryId, budgetId, transactionType, true, moneyDirection, startDate, endDate);
         List<AllTransactionsReportModel> allTransactionsReportModel = new ArrayList<>();
 
         // Date formatting
@@ -1240,6 +1258,11 @@ public class TransactionServiceImpl implements TransactionService{
         Transaction transaction = transactionDao.getTransaction(transactionCommentPayload.getTransactionId());
         transaction.setComment(transactionCommentPayload.getComment());
         return transactionToTransactionDto(transactionDao.updateTransaction(transaction));
+    }
+
+    @Override
+    public Map<String, Object> getTransactionTypesDashboardData(Integer userId, String startDate, String endDate) {
+        return transactionDao.getTransactionTypesDashboardData(userId, startDate, endDate);
     }
 
 

@@ -40,7 +40,7 @@ public class PaymentServiceImpl implements PaymentService{
 
     private final String CALLBACK_URL = "https://github.com/MbogoAlex";
     private final String notificationId = "5f1d6a44-c602-4232-80ba-dce3d1ec34fa";
-//    private final String notificationId = "f16139ae-0317-4142-bf77-dce0333014f0";
+//    private final String notificationId = "b82296f8-31eb-40af-ae0c-dcdac0d99244";
     @Override
     public Boolean getSubscriptionStatus(Integer userId) {
         List<Payment> payments = paymentDao.getLatestPayment(userId);
@@ -138,7 +138,7 @@ public class PaymentServiceImpl implements PaymentService{
         String jsonString = getResponse.body();
 
         Map<String, Object> paymentResponse = gson.fromJson(jsonString, Map.class);
-        if(paymentResponse.get("status").equals("200")) {
+        if(paymentResponse.get("status").equals("200") && paymentResponse.get("payment_status_description").equals("Completed")) {
             return savePayment(paymentStatusPayload.getUserId());
         } else {
             return false;

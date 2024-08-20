@@ -28,7 +28,7 @@ public interface TransactionService {
 
     List<TransactionDto> getTransactions(Integer userId, String entity);
 
-    Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String startDate, String endDate);
+    Map<Object, Object> getUserTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean latest, String moneyDirection, String startDate, String endDate);
 
     Map<Object, Object> getUserTransactionsSorted(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean orderByAmount, Boolean ascendingOrder, String startDate, String endDate);
     Map<Object, Object> getGroupedByDateTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate);
@@ -38,15 +38,17 @@ public interface TransactionService {
 
     Map<Object, Object> getExpenditure(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, Boolean moneyIn, Boolean latest, String startDate, String endDate);
 
-    Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate);
+    Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String startDate, String endDate);
     Map<Object, Object> getGroupedByMonthAndYearTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String month, String year);
 
-    ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String startDate, String endDate) throws JRException, ParseException;
+    ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String startDate, String endDate) throws JRException, ParseException;
 
     Map<String, Object> getDashboardDetails(Integer userId, String date);
 
     String deleteAllTransactions();
 
     TransactionDto transactionComment(TransactionCommentPayload transactionCommentPayload);
+
+    Map<String, Object> getTransactionTypesDashboardData(Integer userId, String startDate, String endDate);
 
 }

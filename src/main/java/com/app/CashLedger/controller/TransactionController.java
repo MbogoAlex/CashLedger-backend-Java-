@@ -6,6 +6,7 @@ import com.app.CashLedger.reportModel.AllTransactionsReportModel;
 import com.app.CashLedger.services.TransactionService;
 import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,10 +35,11 @@ public class TransactionController {
             @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "latest") Boolean latest,
+            @RequestParam(value = "moneyDirection", required = false) String moneyDirection,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getUserTransactions(userId, entity, categoryId, budgetId, transactionType, latest, moneyDirection, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     @GetMapping("transaction/single/{id}")
@@ -93,10 +95,11 @@ public class TransactionController {
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
             @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "moneyDirection", required = false) String moneyDirection,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("transaction", transactionService.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, startDate, endDate), "Transactions fetched", HttpStatus.OK);
+        return buildResponse("transaction", transactionService.getGroupedByEntityTransactions(userId, entity, categoryId, budgetId, transactionType, moneyDirection, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     @PutMapping("transaction/update")
@@ -143,10 +146,11 @@ public class TransactionController {
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
             @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "moneyDirection", required = false) String moneyDirection,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) throws JRException, ParseException {
-        ByteArrayOutputStream reportStream = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, startDate, endDate);
+        ByteArrayOutputStream reportStream = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, moneyDirection, startDate, endDate);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -170,6 +174,15 @@ public class TransactionController {
     @DeleteMapping("transaction/deleteall")
     public ResponseEntity<Response> deleteAllTransactions() {
         return buildResponse("transaction", transactionService.deleteAllTransactions(), "Deleted all transactions", HttpStatus.OK);
+    }
+
+    @GetMapping("transaction/transactiontype/{userId}")
+    ResponseEntity<Response> getTransactionTypesDashboardData(
+            @PathVariable("userId") Integer userId,
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate
+    ) {
+        return buildResponse("transaction", transactionService.getTransactionTypesDashboardData(userId, startDate, endDate), "Transactions fetched", HttpStatus.OK);
     }
 
     @PutMapping("transaction/")
