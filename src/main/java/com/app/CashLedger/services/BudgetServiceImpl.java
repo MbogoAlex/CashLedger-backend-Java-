@@ -114,7 +114,7 @@ public class BudgetServiceImpl implements BudgetService{
             budgetExceededBy = expenditure - budget.getBudgetLimit();
             budget.setLimitReached(true);
             budget.setExceededBy(budgetExceededBy);
-            budget.setLimitReachedAt(transactions.get(0).getDate().atTime(transactions.get(0).getTime()));
+            budget.setLimitReachedAt(transactions.get(transactions.size() - 1).getDate().atTime(transactions.get(transactions.size() - 1).getTime()));
             budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
             return budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure);
         } else {
@@ -151,6 +151,7 @@ public class BudgetServiceImpl implements BudgetService{
                     budget.setLimitReached(true);
                     budget.setExceededBy(budgetExceededBy);
                     budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+                    budget.setLimitReachedAt(transactions.get(transactions.size() - 1).getDate().atTime(transactions.get(transactions.size() - 1).getTime()));
                     transformedBudgets.add(budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure));
                 } else {
                     transformedBudgets.add(budgetToBudgetResponseDto(budget, expenditure));
@@ -172,7 +173,7 @@ public class BudgetServiceImpl implements BudgetService{
 
 
         for(Budget budget : budgets) {
-            List<Transaction> transactions = transactionDao.getGeneralTransactions(budget.getUserAccount().getId(), budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
+            List<Transaction> transactions = transactionDao.getUserTransactions(budget.getUserAccount().getId(), null, budget.getCategory().getId(), budget.getId(), null, true, null,  budget.getCreatedAt().toLocalDate().toString(), LocalDate.now().toString());
 
             double budgetExceededBy = 0.0;
             boolean budgetLimitReached = false;
@@ -193,6 +194,7 @@ public class BudgetServiceImpl implements BudgetService{
                     budget.setLimitReached(true);
                     budget.setExceededBy(budgetExceededBy);
                     budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+                    budget.setLimitReachedAt(transactions.get(transactions.size() - 1).getDate().atTime(transactions.get(transactions.size() - 1).getTime()));
                     transformedBudgets.add(budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure));
                 } else {
                     transformedBudgets.add(budgetToBudgetResponseDto(budget, expenditure));
