@@ -183,13 +183,21 @@ public class BudgetServiceImpl implements BudgetService{
                 }
             }
 
-            if(expenditure >= budget.getBudgetLimit() && !budget.getLimitReached()) {
-                budgetLimitReached = true;
-                budgetExceededBy = expenditure - budget.getBudgetLimit();
-                budget.setLimitReached(true);
-                budget.setExceededBy(budgetExceededBy);
-                budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
-                transformedBudgets.add(budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure));
+            if(expenditure >= budget.getBudgetLimit()) {
+                if(budget.getLimitReached() == false) {
+                    if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+                        budget.setActive(false);
+                    }
+                    budgetLimitReached = true;
+                    budgetExceededBy = expenditure - budget.getBudgetLimit();
+                    budget.setLimitReached(true);
+                    budget.setExceededBy(budgetExceededBy);
+                    budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+                    transformedBudgets.add(budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure));
+                } else {
+                    transformedBudgets.add(budgetToBudgetResponseDto(budget, expenditure));
+                }
+
             } else {
                 transformedBudgets.add(budgetToBudgetResponseDto(budget, expenditure));
             }
