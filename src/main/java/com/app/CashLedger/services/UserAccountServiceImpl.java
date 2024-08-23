@@ -10,7 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 @Service
@@ -82,10 +85,26 @@ public class UserAccountServiceImpl implements UserAccountService{
     }
 
     @Override
-    public List<UserDto> filterUsers(String name, String phoneNumber, String startDate, String endDate) {
+    public List<UserDto> filterUsers(String name, String phoneNumber, String startDateStr, String endDateStr) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        try {
+            if (startDateStr != null && !startDateStr.trim().isEmpty()) {
+                startDate = LocalDate.parse(startDateStr, dateFormatter);
+            }
+            if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+                endDate = LocalDate.parse(endDateStr, dateFormatter);
+            }
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+        }
+
         List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, startDate, endDate);
         List<UserDto> userDtos = new ArrayList<>();
-        for(UserAccount userAccount : userAccounts) {
+        for (UserAccount userAccount : userAccounts) {
             userDtos.add(userToUserDto(userAccount));
         }
         return userDtos;
@@ -143,6 +162,8 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .messages(transformedMessages)
                 .transactions(transformedTransactions)
                 .payments(subscriptionDetails)
+                .createdAt(userAccount.getCreatedAt())
+                .lastLogin(userAccount.getLastLogin())
                 .build();
         return userDetailsDto;
     }

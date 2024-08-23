@@ -162,10 +162,11 @@ public class TransactionController {
             @RequestParam(value = "budgetId", required = false) Integer budgetId,
             @RequestParam(value = "transactionType", required = false) String transactionType,
             @RequestParam(value = "moneyDirection", required = false) String moneyDirection,
+            @RequestParam(value = "reportType") String reportType,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) throws JRException, ParseException {
-        ByteArrayOutputStream reportStream = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, moneyDirection, startDate, endDate);
+        ByteArrayOutputStream reportStream = transactionService.generateAllTransactionsReport(userId, entity, categoryId, budgetId, transactionType, moneyDirection, reportType, startDate, endDate);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

@@ -2,6 +2,7 @@ package com.app.CashLedger.services;
 
 import com.app.CashLedger.dao.PaymentDao;
 import com.app.CashLedger.dao.UserAccountDao;
+import com.app.CashLedger.dto.payment.PaymentDetailsDto;
 import com.app.CashLedger.dto.payment.PaymentPayload;
 import com.app.CashLedger.dto.payment.PaymentStatusPayload;
 import com.app.CashLedger.models.Payment;
@@ -144,7 +145,18 @@ public class PaymentServiceImpl implements PaymentService{
             return false;
         }
     }
-//    @Transactional
+
+    @Override
+    public List<PaymentDetailsDto> getPayments(String name, String month, String phoneNumber, String startDate, String endDate) {
+        List<PaymentDetailsDto> paymentDetailsDtos = new ArrayList<>();
+        List<Payment> payments = paymentDao.getPayments(name, month, phoneNumber, startDate, endDate);
+        for(Payment payment : payments) {
+            paymentDetailsDtos.add(paymentToPaymentDetails(payment));
+        }
+        return paymentDetailsDtos;
+    }
+
+    //    @Transactional
     public Boolean savePayment(Integer userId) {
         System.out.println("Saving payment");
         UserAccount userAccount = userAccountDao.getUser(userId);
@@ -189,7 +201,27 @@ public class PaymentServiceImpl implements PaymentService{
         return (String) responseMap.get("token");
     }
 
+    private PaymentDetailsDto paymentToPaymentDetails(Payment payment) {
+        UserAccount userAccount = payment.getUserAccount();
+        String name;
+        if (userAccount.getFname() == null && userAccount.getLname() == null) {
+            name = userAccount.getPhoneNumber();
+        } else if (userAccount.getFname() == null) {
+            name = userAccount.getLname();
+        } else if (userAccount.getLname() == null) {
+            name = userAccount.getFname();
+        } else {
+            name = userAccount.getFname() + " " + userAccount.getLname();
+        }
+        return PaymentDetailsDto.builder()
+                .id(payment.getId())
+                .name(name)
+                .month(payment.getMonth())
+                .paidAt(payment.getPaidAt())
+                .expiredAt(payment.getExpiredAt())
+                .build();
 
+    }
 
 
 }

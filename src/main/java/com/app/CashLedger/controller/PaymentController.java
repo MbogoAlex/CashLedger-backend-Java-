@@ -44,6 +44,17 @@ public class PaymentController {
     public ResponseEntity<Response> checkSubscriptionPaymentStatus(@RequestBody PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException {
         return buildResponse("payment", paymentService.getSubscriptionFeePaymentStatus(paymentStatusPayload), "Payment status checked", HttpStatus.OK);
     }
+
+    @GetMapping("payment/all")
+    public ResponseEntity<Response> getPayments(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "month", required = false) String month,
+            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        return buildResponse("payments", paymentService.getPayments(name, month, phoneNumber, startDate, endDate), "Payments fetched", HttpStatus.OK);
+    }
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(Response.builder()

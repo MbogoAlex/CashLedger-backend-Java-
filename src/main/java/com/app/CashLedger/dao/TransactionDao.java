@@ -788,7 +788,7 @@ public class TransactionDao {
 
         List<Object[]> results = query.getResultList();
 
-        System.out.println("RESULT:");
+
 
         // Iterate over the results and add to the mapList
         for (Object[] result : results) {
@@ -797,7 +797,7 @@ public class TransactionDao {
             transactionMap.put("transactionType", result[1]);
             transactionMap.put("amount", result[2]);
             mapList.add(transactionMap);
-            System.out.println("Amount Sign: " + result[0] + ", Transaction Type: " + result[1] + ", Sum: " + result[2]);
+
         }
 
         Map<String, Object> map = new HashMap<>();

@@ -41,7 +41,7 @@ public interface TransactionService {
     Map<Object, Object> getGroupedByEntityTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String startDate, String endDate);
     Map<Object, Object> getGroupedByMonthAndYearTransactions(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String month, String year);
 
-    ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String startDate, String endDate) throws JRException, ParseException;
+    ByteArrayOutputStream generateAllTransactionsReport(Integer userId, String entity, Integer categoryId, Integer budgetId, String transactionType, String moneyDirection, String reportType, String startDate, String endDate) throws JRException, ParseException;
 
     Map<String, Object> getDashboardDetails(Integer userId, String date);
 

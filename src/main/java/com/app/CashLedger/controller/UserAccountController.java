@@ -33,9 +33,19 @@ public class UserAccountController {
     public ResponseEntity<Response> getUser(@PathVariable("id") Integer userId) {
         return buildResponse("user", userAccountService.getUsers(), "User fetched", HttpStatus.OK);
     }
-    @GetMapping("user")
+    @GetMapping("user/all")
     public ResponseEntity<Response> getUsers() {
         return buildResponse("user", userAccountService.getUsers(), "Users fetched", HttpStatus.OK);
+    }
+
+    @GetMapping("user/filter")
+    public ResponseEntity<Response> filterUsers(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        return buildResponse("users", userAccountService.filterUsers(name, phoneNumber, startDate, endDate), "Users fetched", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

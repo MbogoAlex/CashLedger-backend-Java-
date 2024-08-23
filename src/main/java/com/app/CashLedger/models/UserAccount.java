@@ -28,6 +28,7 @@ public class UserAccount {
     private String password;
     private Role role;
     private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
 
     @OneToMany(mappedBy = "userAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 @Data
 @AllArgsConstructor
@@ -17,6 +18,8 @@ public class UserDetailsDto {
     private String lname;
     private String email;
     private String phoneNumber;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
     private List<MessageDto> messages;
     private List<TransactionDto> transactions;
     private List<SubscriptionDetails> payments;

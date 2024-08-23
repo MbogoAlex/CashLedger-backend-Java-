@@ -15,6 +15,7 @@ import java.util.List;
 public class MultipleCategoriesReportDto {
     private Integer userId;
     private List<Integer> categoryIds;
+    private String reportType;
     private String startDate;
     private String lastDate;
 }

@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -287,43 +288,89 @@ public class CategoryServiceImpl implements CategoryService{
             allTransactionsReportModel.add(model);
         }
 
-        // Prepare JasperReports data source and parameters
-        JRBeanCollectionDataSource allTransactionsDataSource = new JRBeanCollectionDataSource(allTransactionsReportModel);
+        if ("csv".equalsIgnoreCase(multipleCategoriesReportDto.getReportType())) {
+            // Generate CSV
+            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                 PrintWriter writer = new PrintWriter(byteArrayOutputStream)) {
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("owner", owner);
-        parameters.put("startDate", formattedStartDate);
-        parameters.put("endDate", formattedEndDate);
-        parameters.put("totalIn", "Ksh" + String.format("%.2f", totalIn));
-        parameters.put("totalOut", "Ksh" + String.format("%.2f", totalOut));
-        parameters.put("totalTransactionCost", "Ksh" + String.format("%.2f", totalTransactionCost));
-        parameters.put("size", transactions.size());
-        parameters.put("allTransactionsDataset", allTransactionsDataSource);
+                // Write CSV header
+                writer.println("Owner:," + owner);
+                writer.println("Start Date:," + formattedStartDate);
+                writer.println("End Date:," + formattedEndDate);
+                writer.println("Total in:,"+ "Ksh"+ String.format("%.2f", totalIn));
+                writer.println("Total out:,"+ "Ksh"+ String.format("%.2f", totalOut));
+                writer.println();
+                writer.println("Report Generated:," + new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss").format(new Date()));
+                writer.println();
 
-        // Path to the JRXML file
-        String jrxmlPath = "/templates/AllTransactionsReport.jrxml";
+                writer.println("Date,Time,Transaction Type,Category,Entity,Money In,Money Out,Transaction Cost");
 
-        try (InputStream jrxmlInput = this.getClass().getResourceAsStream(jrxmlPath);
-             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            if (jrxmlInput == null) {
-                throw new IllegalStateException("JRXML file not found at path: " + jrxmlPath);
+                // Write CSV data
+                for (AllTransactionsReportModel model : allTransactionsReportModel) {
+                    writer.println(String.join(",",
+                            model.getDatetime().split(" ")[0],   // Date
+                            model.getDatetime().split(" ")[1],   // Time
+                            model.getTransactionType(),
+                            model.getCategory(),
+                            model.getEntity(),
+                            model.getMoneyIn(),
+                            model.getMoneyOut(),
+                            model.getTransactionCost()
+                    ));
+                }
+
+                // Write totals at the end
+                writer.println(",,,,,Total In: Ksh" + String.format("%.2f", totalIn) +
+                        ",Total Out: Ksh" + String.format("%.2f", totalOut) +
+                        ",Total Transaction Cost: Ksh" + String.format("%.2f", totalTransactionCost));
+
+                writer.flush();
+                return byteArrayOutputStream;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Error generating CSV report", e);
             }
-            JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
-            JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
+        } else {
+            // Generate PDF
+            String jrxmlPath = "/templates/AllTransactionsReport.jrxml";
+            try (InputStream jrxmlInput = this.getClass().getResourceAsStream(jrxmlPath);
+                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 
-            // Export the report to a PDF
-            JRPdfExporter exporter = new JRPdfExporter();
-            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
-            configuration.setCompressed(true);
-            exporter.setConfiguration(configuration);
-            exporter.setExporterInput(new SimpleExporterInput(print));
-            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
-            exporter.exportReport();
+                if (jrxmlInput == null) {
+                    throw new IllegalStateException("JRXML file not found at path: " + jrxmlPath);
+                }
 
-            return byteArrayOutputStream;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new JRException("Error generating report", e);
+                JRBeanCollectionDataSource allTransactionsDataSource = new JRBeanCollectionDataSource(allTransactionsReportModel);
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("owner", owner);
+                parameters.put("startDate", formattedStartDate);
+                parameters.put("endDate", formattedEndDate);
+                parameters.put("totalIn", "Ksh" + String.format("%.2f", totalIn));
+                parameters.put("totalOut", "Ksh" + String.format("%.2f", totalOut));
+                parameters.put("totalTransactionCost", "Ksh" + String.format("%.2f", totalTransactionCost));
+                parameters.put("size", transactions.size());
+                parameters.put("allTransactionsDataset", allTransactionsDataSource);
+
+                JasperReport report = JasperCompileManager.compileReport(jrxmlInput);
+                JasperPrint print = JasperFillManager.fillReport(report, parameters, new JREmptyDataSource());
+
+                // Export the report to a PDF
+                JRPdfExporter exporter = new JRPdfExporter();
+                SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+                configuration.setCompressed(true);
+                exporter.setConfiguration(configuration);
+                exporter.setExporterInput(new SimpleExporterInput(print));
+                exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
+                exporter.exportReport();
+
+                return byteArrayOutputStream;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new JRException("Error generating PDF report", e);
+            }
         }
     }
 
