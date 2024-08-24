@@ -23,6 +23,8 @@ public class Payment {
     private LocalDateTime paidAt;
     private LocalDateTime expiredAt;
     private Double amount;
+    private LocalDateTime freeTrialStartedOn;
+    private LocalDateTime freeTrialEndedOn;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserAccount userAccount;

@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,6 +20,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -47,12 +47,32 @@ public class PaymentServiceImpl implements PaymentService{
         List<Payment> payments = paymentDao.getLatestPayment(userId);
 
         if(payments != null && !payments.isEmpty()) {
-            Payment payment = payments.get(0);
-            return payment.getExpiredAt().isAfter(payment.getPaidAt());
+            Payment payment = payments.get(payments.size() -1);
+            if(payment.getFreeTrialStartedOn() != null) {
+                return payment.getFreeTrialEndedOn().isAfter(payment.getFreeTrialStartedOn());
+            } else {
+                return payment.getExpiredAt().isAfter(payment.getPaidAt());
+            }
         } else {
             return false;
         }
     }
+    @Override
+    public int getFreeTrialStatus(Integer userId) {
+        List<Payment> payments = paymentDao.getLatestPayment(userId);
+        Payment payment = payments.get(payments.size() -1);
+        if(payment.getFreeTrialStartedOn() != null) {
+            if(ChronoUnit.DAYS.between(payment.getFreeTrialStartedOn(), payment.getFreeTrialEndedOn()) < 1) {
+                return 0;
+            } else {
+                return Math.toIntExact(ChronoUnit.DAYS.between(payment.getFreeTrialStartedOn(), payment.getFreeTrialEndedOn()));
+            }
+        } else {
+            return 0;
+        }
+    }
+
+
 
     @Override
     public Map<String, Object> paySubscriptionFee(PaymentPayload paymentPayload) throws URISyntaxException, IOException, InterruptedException {
@@ -219,6 +239,8 @@ public class PaymentServiceImpl implements PaymentService{
                 .month(payment.getMonth())
                 .paidAt(payment.getPaidAt())
                 .expiredAt(payment.getExpiredAt())
+                .freeTrialStartedOn(payment.getFreeTrialStartedOn())
+                .freeTrialEndedOn(payment.getFreeTrialEndedOn())
                 .build();
 
     }

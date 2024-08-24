@@ -17,4 +17,6 @@ public class PaymentDetailsDto {
     private Month month;
     private LocalDateTime paidAt;
     private LocalDateTime expiredAt;
+    private LocalDateTime freeTrialStartedOn;
+    private LocalDateTime freeTrialEndedOn;
 }

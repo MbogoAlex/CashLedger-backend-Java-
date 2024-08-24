@@ -18,4 +18,5 @@ public interface PaymentService {
     public Boolean getSubscriptionFeePaymentStatus(PaymentStatusPayload paymentStatusPayload) throws URISyntaxException, IOException, InterruptedException;
 
     public List<PaymentDetailsDto> getPayments(String name, String month, String phoneNumber, String startDate, String endDate);
+    int getFreeTrialStatus(Integer userId);
 }

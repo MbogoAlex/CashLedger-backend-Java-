@@ -55,6 +55,11 @@ public class PaymentController {
     ) {
         return buildResponse("payments", paymentService.getPayments(name, month, phoneNumber, startDate, endDate), "Payments fetched", HttpStatus.OK);
     }
+
+    @GetMapping("payment/freetrialstatus/{userId}")
+    public ResponseEntity<Response> getFreeTrialStatus(@PathVariable("userId") Integer userId) {
+        return buildResponse("days", paymentService.getFreeTrialStatus(userId), "Payment retrieved", HttpStatus.OK);
+    }
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {
         return ResponseEntity.status(status)
                 .body(Response.builder()

@@ -1,5 +1,6 @@
 package com.app.CashLedger.services;
 
+import com.app.CashLedger.dao.PaymentDao;
 import com.app.CashLedger.dao.UserAccountDao;
 import com.app.CashLedger.dto.*;
 import com.app.CashLedger.dto.payment.SubscriptionDetails;
@@ -20,13 +21,16 @@ import java.util.List;
 public class UserAccountServiceImpl implements UserAccountService{
     private final UserAccountDao userAccountDao;
     private final PasswordEncoder passwordEncoder;
+    private final PaymentDao paymentDao;
     @Autowired
     public UserAccountServiceImpl(
             UserAccountDao userAccountDao,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            PaymentDao paymentDao
     ) {
         this.userAccountDao = userAccountDao;
         this.passwordEncoder = passwordEncoder;
+        this.paymentDao = paymentDao;
     }
     @Transactional
     @Override
@@ -42,7 +46,14 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .messages(new ArrayList<>())
                 .transactions(new ArrayList<>())
                 .build();
-        return userAccountToUserDetailsDto(userAccountDao.saveUser(userAccount));
+        UserAccount userAccount1 = userAccountDao.saveUser(userAccount);
+        Payment payment = Payment.builder()
+                .freeTrialStartedOn(LocalDateTime.now())
+                .freeTrialEndedOn(LocalDateTime.now().plusDays(7))
+                .userAccount(userAccount1)
+                .build();
+        paymentDao.makePayment(payment);
+        return userAccountToUserDetailsDto(userAccount1);
     }
     @Transactional
     @Override
