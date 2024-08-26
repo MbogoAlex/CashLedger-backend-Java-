@@ -160,8 +160,8 @@ public class AuthController {
         SubscriptionDetails subscriptionDetails = SubscriptionDetails.builder()
                 .id(payment.getId())
                 .month(payment.getMonth())
-                .paidAt(payment.getPaidAt())
-                .expiredAt(payment.getExpiredAt())
+                .paidAt(String.valueOf(payment.getPaidAt()))
+                .expiredAt(String.valueOf(payment.getExpiredAt()))
                 .sessionExpired(payment.getPaidAt().isAfter(payment.getExpiredAt()))
                 .userId(payment.getUserAccount().getId())
                 .build();
