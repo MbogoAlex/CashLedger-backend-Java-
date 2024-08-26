@@ -3,6 +3,10 @@ package com.app.CashLedger.dao;
 import com.app.CashLedger.models.Payment;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -26,6 +31,51 @@ public class PaymentDao {
     }
 
     public List<Payment> getPayments(String name, String month, String phoneNumber, String startDate, String endDate) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Payment> cq = cb.createQuery(Payment.class);
+        Root<Payment> payment = cq.from(Payment.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        // Handle name filter
+        if (name != null && !name.isEmpty()) {
+            Predicate fnamePredicate = cb.equal(cb.lower(payment.get("userAccount").get("fname")), name.toLowerCase());
+            Predicate lnamePredicate = cb.equal(cb.lower(payment.get("userAccount").get("lname")), name.toLowerCase());
+            predicates.add(cb.or(fnamePredicate, lnamePredicate));
+        }
+
+        // Handle phone number filter
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            predicates.add(cb.equal(cb.lower(payment.get("userAccount").get("phoneNumber")), phoneNumber.toLowerCase()));
+        }
+
+        // Handle date range filter
+        if (startDate != null) {
+            LocalDateTime startDateTime = LocalDate.parse(startDate).atStartOfDay();
+            predicates.add(cb.greaterThanOrEqualTo(payment.get("paidAt"), startDateTime));
+        }
+
+        if (endDate != null) {
+            LocalDateTime endDateTime = LocalDate.parse(endDate).plusDays(1).atStartOfDay().minusSeconds(1); // inclusive of the endDate
+            predicates.add(cb.lessThanOrEqualTo(payment.get("paidAt"), endDateTime));
+        }
+
+        // Handle month filter
+        if (month != null && !month.isEmpty()) {
+            Integer paymentMonth = Month.valueOf(month.toUpperCase()).getValue();
+            predicates.add(cb.equal(cb.function("MONTH", Integer.class, payment.get("paidAt")), paymentMonth));
+        }
+
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+
+        TypedQuery<Payment> query = entityManager.createQuery(cq);
+
+
+        return query.getResultList();
+    }
+
+
+    public List<Payment> getUserPayments(Integer userId, String startDate, String endDate) {
         LocalDateTime startDateTime = null;
         LocalDateTime endDateTime = null;
         Integer paymentMonth = null;
@@ -38,18 +88,11 @@ public class PaymentDao {
             endDateTime = LocalDate.parse(endDate).plusDays(1).atStartOfDay().minusSeconds(1); // inclusive of the endDate
         }
 
-        if (month != null) {
-            paymentMonth = Month.valueOf(month.toUpperCase()).getValue(); // Convert the Month enum to its integer value
-        }
 
         StringBuilder queryBuilder = new StringBuilder("from Payment p where 1=1"); // Start with a true condition
 
-        if (name != null) {
-            queryBuilder.append(" and (p.userAccount.fname = :name or p.userAccount.lname = :name)");
-        }
-
-        if (phoneNumber != null) {
-            queryBuilder.append(" and p.userAccount.phoneNumber = :phoneNumber");
+        if(userId != null) {
+            queryBuilder.append(" and p.userAccount.id = :userId");
         }
 
         if (startDateTime != null) {
@@ -66,13 +109,6 @@ public class PaymentDao {
 
         TypedQuery<Payment> query = entityManager.createQuery(queryBuilder.toString(), Payment.class);
 
-        if (name != null) {
-            query.setParameter("name", name);
-        }
-
-        if (phoneNumber != null) {
-            query.setParameter("phoneNumber", phoneNumber);
-        }
 
         if (startDateTime != null) {
             query.setParameter("startDateTime", startDateTime);
@@ -85,6 +121,8 @@ public class PaymentDao {
         if (paymentMonth != null) {
             query.setParameter("paymentMonth", paymentMonth);
         }
+
+        query.setParameter("userId", userId);
 
         return query.getResultList();
     }

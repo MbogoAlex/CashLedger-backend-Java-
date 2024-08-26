@@ -1,7 +1,9 @@
 package com.app.CashLedger.controller;
 
 import com.app.CashLedger.dao.UserAccountDao;
+import com.app.CashLedger.dto.PaginatedResponse;
 import com.app.CashLedger.dto.RegistrationDetailsDto;
+import com.app.CashLedger.dto.UserDto;
 import com.app.CashLedger.models.Response;
 import com.app.CashLedger.models.UserAccount;
 import com.app.CashLedger.services.UserAccountService;
@@ -44,10 +46,14 @@ public class UserAccountController {
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "orderByDate") Boolean orderByDate,
             @RequestParam(value = "startDate", required = false) String startDate,
-            @RequestParam(value = "endDate", required = false) String endDate
+            @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        return buildResponse("users", userAccountService.filterUsers(name, phoneNumber, orderByDate, startDate, endDate), "Users fetched", HttpStatus.OK);
+        PaginatedResponse<UserDto> paginatedResponse = userAccountService.filterUsers(name, phoneNumber, orderByDate, startDate, endDate, page, size);
+        return buildResponse("users", paginatedResponse, "Users fetched", HttpStatus.OK);
     }
+
 
     @GetMapping("user/active")
     public ResponseEntity<Response> getActiveUsers(
@@ -55,9 +61,11 @@ public class UserAccountController {
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "orderByDate") Boolean orderByDate,
             @RequestParam(value = "startDate", required = false) String startDate,
-            @RequestParam(value = "endDate", required = false) String endDate
+            @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        return buildResponse("users", userAccountService.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate), "Users fetched", HttpStatus.OK);
+        return buildResponse("users", userAccountService.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate, page, size), "Users fetched", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

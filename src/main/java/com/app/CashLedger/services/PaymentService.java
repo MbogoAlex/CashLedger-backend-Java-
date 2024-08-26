@@ -19,4 +19,6 @@ public interface PaymentService {
 
     public List<PaymentDetailsDto> getPayments(String name, String month, String phoneNumber, String startDate, String endDate);
     int getFreeTrialStatus(Integer userId);
+
+    List<PaymentDetailsDto> getUserPayments(Integer userId, String startDate, String endDate);
 }

@@ -72,6 +72,15 @@ public class PaymentServiceImpl implements PaymentService{
         }
     }
 
+    @Override
+    public List<PaymentDetailsDto> getUserPayments(Integer userId, String startDate, String endDate) {
+        List<PaymentDetailsDto> paymentDetailsDtos = new ArrayList<>();
+        List<Payment> payments = paymentDao.getUserPayments(userId, startDate, endDate);
+        for(Payment payment : payments) {
+            paymentDetailsDtos.add(paymentToPaymentDetails(payment));
+        }
+        return paymentDetailsDtos;
+    }
 
 
     @Override
@@ -223,16 +232,19 @@ public class PaymentServiceImpl implements PaymentService{
 
     private PaymentDetailsDto paymentToPaymentDetails(Payment payment) {
         UserAccount userAccount = payment.getUserAccount();
-        String name;
-        if (userAccount.getFname() == null && userAccount.getLname() == null) {
-            name = userAccount.getPhoneNumber();
-        } else if (userAccount.getFname() == null) {
-            name = userAccount.getLname();
-        } else if (userAccount.getLname() == null) {
-            name = userAccount.getFname();
-        } else {
-            name = userAccount.getFname() + " " + userAccount.getLname();
+        String name = "N/A";
+        if(userAccount != null) {
+            if (userAccount.getFname() == null && userAccount.getLname() == null) {
+                name = userAccount.getPhoneNumber();
+            } else if (userAccount.getFname() == null) {
+                name = userAccount.getLname();
+            } else if (userAccount.getLname() == null) {
+                name = userAccount.getFname();
+            } else {
+                name = userAccount.getFname() + " " + userAccount.getLname();
+            }
         }
+
         return PaymentDetailsDto.builder()
                 .id(payment.getId())
                 .name(name)

@@ -1,5 +1,6 @@
 package com.app.CashLedger.services;
 
+import com.app.CashLedger.dto.PaginatedResponse;
 import com.app.CashLedger.dto.RegistrationDetailsDto;
 import com.app.CashLedger.dto.UserDetailsDto;
 import com.app.CashLedger.dto.UserDto;
@@ -18,6 +19,6 @@ public interface UserAccountService {
     UserDetailsDto getUser(Integer userId);
 
     List<UserDetailsDto> getUsers();
-    List<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDate, String endDate);
-    List<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDate, String endDate);
+    PaginatedResponse<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr, int page, int size);
+    PaginatedResponse<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr, int page, int size);
 }

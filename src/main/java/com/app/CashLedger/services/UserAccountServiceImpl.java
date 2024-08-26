@@ -98,7 +98,7 @@ public class UserAccountServiceImpl implements UserAccountService{
     }
 
     @Override
-    public List<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr) {
+    public PaginatedResponse<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr, int page, int size) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         LocalDate startDate = null;
@@ -115,16 +115,22 @@ public class UserAccountServiceImpl implements UserAccountService{
             e.printStackTrace();
         }
 
-        List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, orderByDate, startDate, endDate);
+        List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, orderByDate, startDate, endDate, page, size);
+        long totalUsers = userAccountDao.countFilteredUsers(name, phoneNumber, orderByDate, startDate, endDate);
+
         List<UserDto> userDtos = new ArrayList<>();
         for (UserAccount userAccount : userAccounts) {
             userDtos.add(userToUserDto(userAccount));
         }
-        return userDtos;
+
+        int totalPages = (int) Math.ceil((double) totalUsers / size);
+
+        return new PaginatedResponse<>(userDtos, totalUsers, totalPages, page, size);
     }
 
+
     @Override
-    public List<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr) {
+    public PaginatedResponse<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr, int page, int size) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         LocalDate startDate = null;
@@ -141,12 +147,17 @@ public class UserAccountServiceImpl implements UserAccountService{
             e.printStackTrace();
         }
 
-        List<UserAccount> userAccounts = userAccountDao.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate);
+        List<UserAccount> userAccounts = userAccountDao.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate, page, size);
+        long totalUsers = userAccountDao.countActiveUsers(name, phoneNumber, orderByDate, startDate, endDate);
+
         List<UserDto> userDtos = new ArrayList<>();
         for (UserAccount userAccount : userAccounts) {
             userDtos.add(userToUserDto(userAccount));
         }
-        return userDtos;
+
+        int totalPages = (int) Math.ceil((double) totalUsers / size);
+
+        return new PaginatedResponse<>(userDtos, totalUsers, totalPages, page, size);
     }
 
     public UserDto userToUserDto(UserAccount userAccount) {
@@ -166,6 +177,7 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .createdOn(String.valueOf(userAccount.getCreatedAt()))
                 .lastLogin(String.valueOf(userAccount.getLastLogin()))
                 .transactionsSize(userAccount.getTransactions().size())
+                .paymentsSize(userAccount.getPayments().size())
                 .build();
     }
 

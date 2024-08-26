@@ -48,7 +48,7 @@ public class UserAccountDao {
         return query.getResultList();
     }
 
-    public List<UserAccount> filterUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate) {
+    public List<UserAccount> filterUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate, int page, int size) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<UserAccount> cq = cb.createQuery(UserAccount.class);
         Root<UserAccount> userAccount = cq.from(UserAccount.class);
@@ -84,13 +84,50 @@ public class UserAccountDao {
             cq.orderBy(cb.desc(cb.size(userAccount.get("transactions"))));
         }
 
+        // Apply pagination
         TypedQuery<UserAccount> query = entityManager.createQuery(cq);
+        query.setFirstResult((page - 1) * size);
+        query.setMaxResults(size);
+
         return query.getResultList();
+    }
+
+    public long countFilteredUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<UserAccount> userAccount = cq.from(UserAccount.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (name != null && !name.isEmpty()) {
+            Predicate fnamePredicate = cb.like(cb.lower(userAccount.get("fname")), "%" + name.toLowerCase() + "%");
+            Predicate lnamePredicate = cb.like(cb.lower(userAccount.get("lname")), "%" + name.toLowerCase() + "%");
+            predicates.add(cb.or(fnamePredicate, lnamePredicate));
+        }
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            predicates.add(cb.like(cb.lower(userAccount.get("phoneNumber")), "%" + phoneNumber.toLowerCase() + "%"));
+        }
+
+        if (startDate != null) {
+            LocalDateTime startDateTime = startDate.atStartOfDay();
+            predicates.add(cb.greaterThanOrEqualTo(userAccount.get("createdAt"), startDateTime));
+        }
+
+        if (endDate != null) {
+            LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusSeconds(1); // inclusive of the endDate
+            predicates.add(cb.lessThanOrEqualTo(userAccount.get("createdAt"), endDateTime));
+        }
+
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.select(cb.count(userAccount));
+
+        return entityManager.createQuery(cq).getSingleResult();
     }
 
 
 
-    public List<UserAccount> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate) {
+    public List<UserAccount> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate, int page, int size) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<UserAccount> cq = cb.createQuery(UserAccount.class);
         Root<UserAccount> userAccount = cq.from(UserAccount.class);
@@ -126,8 +163,44 @@ public class UserAccountDao {
             cq.orderBy(cb.desc(cb.size(userAccount.get("transactions"))));
         }
 
+        // Apply pagination
         TypedQuery<UserAccount> query = entityManager.createQuery(cq);
+        query.setFirstResult((page - 1) * size);
+        query.setMaxResults(size);
         return query.getResultList();
+    }
+
+    public long countActiveUsers(String name, String phoneNumber, Boolean orderByDate, LocalDate startDate, LocalDate endDate) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<UserAccount> userAccount = cq.from(UserAccount.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (name != null && !name.isEmpty()) {
+            Predicate fnamePredicate = cb.like(cb.lower(userAccount.get("fname")), "%" + name.toLowerCase() + "%");
+            Predicate lnamePredicate = cb.like(cb.lower(userAccount.get("lname")), "%" + name.toLowerCase() + "%");
+            predicates.add(cb.or(fnamePredicate, lnamePredicate));
+        }
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            predicates.add(cb.like(cb.lower(userAccount.get("phoneNumber")), "%" + phoneNumber.toLowerCase() + "%"));
+        }
+
+        if (startDate != null) {
+            LocalDateTime startDateTime = startDate.atStartOfDay();
+            predicates.add(cb.greaterThanOrEqualTo(userAccount.get("lastLogin"), startDateTime));
+        }
+
+        if (endDate != null) {
+            LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusSeconds(1); // inclusive of the endDate
+            predicates.add(cb.lessThanOrEqualTo(userAccount.get("lastLogin"), endDateTime));
+        }
+
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.select(cb.count(userAccount));
+
+        return entityManager.createQuery(cq).getSingleResult();
     }
 
 

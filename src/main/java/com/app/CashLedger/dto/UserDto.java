@@ -17,4 +17,5 @@ public class UserDto {
     private String createdOn;
     private String lastLogin;
     private Integer transactionsSize;
+    private Integer paymentsSize;
 }
