@@ -75,8 +75,10 @@ public class BudgetServiceImpl implements BudgetService{
 
         if(expenditure >= budgetDto.getBudgetLimit()) {
             budgetLimitReached = true;
-            budgetExceededBy = expenditure - budget.getBudgetLimit();
+        } else {
+            budgetLimitReached = false;
         }
+        budgetExceededBy = expenditure - budget.getBudgetLimit();
         if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
             budget.setActive(false);
         }
@@ -106,17 +108,24 @@ public class BudgetServiceImpl implements BudgetService{
             }
         }
 
+        if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+            budget.setActive(false);
+        }
+
         if(expenditure >= budget.getBudgetLimit()) {
-            if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
-                budget.setActive(false);
+
+            if(budget.getLimitReached() == false) {
+                budgetLimitReached = true;
+                budgetExceededBy = expenditure - budget.getBudgetLimit();
+                budget.setLimitReached(true);
+                budget.setExceededBy(budgetExceededBy);
+                budget.setLimitReachedAt(transactions.get(transactions.size() - 1).getDate().atTime(transactions.get(transactions.size() - 1).getTime()));
+                budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
+                return budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure);
+            } else {
+                return budgetToBudgetResponseDto(budget, expenditure);
             }
-            budgetLimitReached = true;
-            budgetExceededBy = expenditure - budget.getBudgetLimit();
-            budget.setLimitReached(true);
-            budget.setExceededBy(budgetExceededBy);
-            budget.setLimitReachedAt(transactions.get(transactions.size() - 1).getDate().atTime(transactions.get(transactions.size() - 1).getTime()));
-            budget.setLimitDate(LocalDate.parse(budget.getLimitDate().toString()));
-            return budgetToBudgetResponseDto(budgetDao.updateBudget(budget), expenditure);
+
         } else {
             return budgetToBudgetResponseDto(budgetDao.getBudget(budgetId), expenditure);
         }
@@ -141,11 +150,14 @@ public class BudgetServiceImpl implements BudgetService{
                 }
             }
 
+            if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+                budget.setActive(false);
+            }
+
             if(expenditure >= budget.getBudgetLimit()) {
+
                 if(budget.getLimitReached() == false) {
-                    if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
-                        budget.setActive(false);
-                    }
+
                     budgetLimitReached = true;
                     budgetExceededBy = expenditure - budget.getBudgetLimit();
                     budget.setLimitReached(true);
@@ -184,11 +196,13 @@ public class BudgetServiceImpl implements BudgetService{
                 }
             }
 
+            if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
+                budget.setActive(false);
+            }
+
             if(expenditure >= budget.getBudgetLimit()) {
                 if(budget.getLimitReached() == false) {
-                    if(ChronoUnit.DAYS.between(budget.getLimitDate(), LocalDateTime.now()) > 0) {
-                        budget.setActive(false);
-                    }
+
                     budgetLimitReached = true;
                     budgetExceededBy = expenditure - budget.getBudgetLimit();
                     budget.setLimitReached(true);
