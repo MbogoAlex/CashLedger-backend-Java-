@@ -18,5 +18,6 @@ public interface UserAccountService {
     UserDetailsDto getUser(Integer userId);
 
     List<UserDetailsDto> getUsers();
-    List<UserDto> filterUsers(String name, String phoneNumber, String startDate, String endDate);
+    List<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDate, String endDate);
+    List<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDate, String endDate);
 }

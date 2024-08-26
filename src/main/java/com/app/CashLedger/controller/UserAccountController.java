@@ -42,10 +42,22 @@ public class UserAccountController {
     public ResponseEntity<Response> filterUsers(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "orderByDate") Boolean orderByDate,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
-        return buildResponse("users", userAccountService.filterUsers(name, phoneNumber, startDate, endDate), "Users fetched", HttpStatus.OK);
+        return buildResponse("users", userAccountService.filterUsers(name, phoneNumber, orderByDate, startDate, endDate), "Users fetched", HttpStatus.OK);
+    }
+
+    @GetMapping("user/active")
+    public ResponseEntity<Response> getActiveUsers(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "orderByDate") Boolean orderByDate,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        return buildResponse("users", userAccountService.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate), "Users fetched", HttpStatus.OK);
     }
 
     private ResponseEntity<Response> buildResponse(String desc, Object data, String message, HttpStatus status) {

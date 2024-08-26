@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class UserAccountServiceImpl implements UserAccountService{
     private final UserAccountDao userAccountDao;
@@ -96,7 +98,7 @@ public class UserAccountServiceImpl implements UserAccountService{
     }
 
     @Override
-    public List<UserDto> filterUsers(String name, String phoneNumber, String startDateStr, String endDateStr) {
+    public List<UserDto> filterUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         LocalDate startDate = null;
@@ -113,7 +115,33 @@ public class UserAccountServiceImpl implements UserAccountService{
             e.printStackTrace();
         }
 
-        List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, startDate, endDate);
+        List<UserAccount> userAccounts = userAccountDao.filterUsers(name, phoneNumber, orderByDate, startDate, endDate);
+        List<UserDto> userDtos = new ArrayList<>();
+        for (UserAccount userAccount : userAccounts) {
+            userDtos.add(userToUserDto(userAccount));
+        }
+        return userDtos;
+    }
+
+    @Override
+    public List<UserDto> getActiveUsers(String name, String phoneNumber, Boolean orderByDate, String startDateStr, String endDateStr) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        try {
+            if (startDateStr != null && !startDateStr.trim().isEmpty()) {
+                startDate = LocalDate.parse(startDateStr, dateFormatter);
+            }
+            if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+                endDate = LocalDate.parse(endDateStr, dateFormatter);
+            }
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+        }
+
+        List<UserAccount> userAccounts = userAccountDao.getActiveUsers(name, phoneNumber, orderByDate, startDate, endDate);
         List<UserDto> userDtos = new ArrayList<>();
         for (UserAccount userAccount : userAccounts) {
             userDtos.add(userToUserDto(userAccount));
@@ -135,7 +163,8 @@ public class UserAccountServiceImpl implements UserAccountService{
                 .name(name)
                 .email(userAccount.getEmail())
                 .phoneNumber(userAccount.getPhoneNumber())
-                .createdOn(userAccount.getCreatedAt().toString())
+                .createdOn(String.valueOf(userAccount.getCreatedAt()))
+                .lastLogin(String.valueOf(userAccount.getLastLogin()))
                 .transactionsSize(userAccount.getTransactions().size())
                 .build();
     }
@@ -205,13 +234,28 @@ public class UserAccountServiceImpl implements UserAccountService{
     }
 
     SubscriptionDetails paymentToPaymentDetails(Payment payment) {
+        Boolean sessionExpired;
+        String paidAt;
+        String expiredAt;
+        Integer userId;
+        if(payment.getPaidAt() != null) {
+            sessionExpired = payment.getPaidAt().isAfter(payment.getExpiredAt());
+            paidAt = String.valueOf(payment.getPaidAt());
+            expiredAt = String.valueOf(payment.getExpiredAt());
+            userId = payment.getUserAccount().getId();
+        } else {
+            sessionExpired = true;
+            paidAt = "";
+            expiredAt = "";
+            userId = 0;
+        }
         SubscriptionDetails subscriptionDetails = SubscriptionDetails.builder()
                 .id(payment.getId())
                 .month(payment.getMonth())
-                .paidAt(payment.getPaidAt())
-                .expiredAt(payment.getExpiredAt())
-                .sessionExpired(payment.getPaidAt().isAfter(payment.getExpiredAt()))
-                .userId(payment.getUserAccount().getId())
+                .paidAt(paidAt)
+                .expiredAt(expiredAt)
+                .sessionExpired(sessionExpired)
+                .userId(userId)
                 .build();
         return subscriptionDetails;
     }

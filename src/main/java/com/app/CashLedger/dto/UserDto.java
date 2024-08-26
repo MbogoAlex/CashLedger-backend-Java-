@@ -15,5 +15,6 @@ public class UserDto {
     private String email;
     private String phoneNumber;
     private String createdOn;
+    private String lastLogin;
     private Integer transactionsSize;
 }

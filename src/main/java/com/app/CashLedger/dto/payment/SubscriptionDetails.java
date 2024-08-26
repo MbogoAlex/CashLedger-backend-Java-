@@ -14,8 +14,8 @@ import java.time.Month;
 public class SubscriptionDetails {
     private Integer id;
     private Month month;
-    private LocalDateTime paidAt;
-    private LocalDateTime expiredAt;
+    private String paidAt;
+    private String expiredAt;
     private Integer userId;
     private Boolean sessionExpired;
 }
