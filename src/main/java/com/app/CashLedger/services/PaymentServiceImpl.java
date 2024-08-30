@@ -62,10 +62,12 @@ public class PaymentServiceImpl implements PaymentService{
         List<Payment> payments = paymentDao.getLatestPayment(userId);
         Payment payment = payments.get(payments.size() -1);
         if(payment.getFreeTrialStartedOn() != null) {
-            if(ChronoUnit.DAYS.between(payment.getFreeTrialStartedOn(), payment.getFreeTrialEndedOn()) < 1) {
+            if(ChronoUnit.DAYS.between(LocalDateTime.now(), payment.getFreeTrialEndedOn()) < 1) {
                 return 0;
             } else {
-                return Math.toIntExact(ChronoUnit.DAYS.between(payment.getFreeTrialStartedOn(), payment.getFreeTrialEndedOn()));
+                // System.out.println("FREE TRIA DAYES: "+Math.toIntExact(ChronoUnit.DAYS.between(LocalDateTime.now(), payment.getFreeTrialEndedOn())));
+                return Math.toIntExact(ChronoUnit.DAYS.between(LocalDateTime.now(), payment.getFreeTrialEndedOn()));
+
             }
         } else {
             return 0;
