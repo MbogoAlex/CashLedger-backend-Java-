@@ -27,7 +27,7 @@ public class UserAccountController {
         this.userAccountDao = userAccountDao;
     }
 
-    //test
+    //test2
 
     @PutMapping("user/{id}")
     public ResponseEntity<Response> updateUser(@RequestBody RegistrationDetailsDto registrationDetailsDto, @PathVariable("id") Integer userId) {
